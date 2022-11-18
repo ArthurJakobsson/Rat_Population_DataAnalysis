@@ -1,0 +1,30 @@
+---
+title:  36-315 Final Project Data Pre-analysis 
+author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
+date:  November 18, 2022 
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+urlcolor: blue
+---
+
+# Rat Sighting Dataset - Data Pre-analysis
+
+```{r}
+rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
+# https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
+health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv') 
+# https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
+drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
+# https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+
+
+# clean up rat dataset (remove empty/useless columns)
+rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
+# clean up health inspection dataset (remove empty/useless columns)
+health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))
+```
