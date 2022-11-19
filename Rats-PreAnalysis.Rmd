@@ -14,6 +14,20 @@ urlcolor: blue
 
 # Rat Sighting Dataset - Data Pre-analysis
 
+```{r} 
+# library imports
+
+library(tigris)
+library(dplyr)
+library(leaflet)
+library(sp)
+library(ggmap)
+library(maptools)
+library(broom)
+library(httr)
+library(rgdal)
+```
+
 ```{r}
 rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
 # https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
@@ -22,9 +36,42 @@ health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspect
 drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
 # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
 
+#NYC map lines
+r <- GET('http://data.beta.nyc//dataset/0ff93d2d-90ba-457c-9f7e-39e47bf2ac5f/resource/35dd04fb-81b3-479b-a074-a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson')
+nyc_neighborhoods <- readOGR(content(r,'text'), 'OGRGeoJSON', verbose = F)
+# https://rpubs.com/jhofman/nycmaps
+
 
 # clean up rat dataset (remove empty/useless columns)
 rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
 # clean up health inspection dataset (remove empty/useless columns)
 health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))
+```
+
+
+```{r}
+# maps setup
+
+
+left =-74.05 #-74.2 staten island
+bottom = 40.68 #40.55 staten island
+right = -73.87# -73.8 all brooklyn
+top = 40.85
+nyc_coords <- c(left, bottom, right, top)
+
+nyc_map <- get_stamenmap(nyc_coords, maptype = "terrain", zoom = 11)
+nyc_neighborhoods_df <- tidy(nyc_neighborhoods) # https://rpubs.com/jhofman/nycmaps
+
+# @here I tried to make this map larger but I couldn't figure out how
+ggmap(nyc_map) + 
+  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
+```
+
+```{r}
+# importing rats
+
+ratSubset <- subset(rats, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom)
+
+ggmap(nyc_map) +
+  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "maroon3")
 ```
