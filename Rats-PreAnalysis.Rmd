@@ -54,7 +54,7 @@ health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Co
 # maps setup
 
 #nice map (manhattan, brooklyn, queens, a bit of bronx)
-left =-74.05 
+left =-74.03 
 bottom = 40.68 
 right = -73.87
 top = 40.85
@@ -99,7 +99,47 @@ nyc_mapFPolygon
 # importing rats
 
 ratSubset <- subset(rats, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom)
+ratSubsetF <- subset(rats, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF)
+ratSubsetM <- subset(rats, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM)
 
-ggmap(nyc_map) +
-  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "maroon3")
+health_inspection[, c("SCORE")] <- sapply(health_inspection[, c("SCORE")], as.integer)
+health_inspection["SCORE"][is.na(health_inspection["SCORE"])] <- 0
+
+healthSubset <- subset(health_inspection, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom)
+healthSubsetF <- subset(health_inspection, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF)
+healthSubsetM <- subset(health_inspection, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM)
+
+rat_map <- ggmap(nyc_map) +
+  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
+
+rat_mapF <- ggmap(nyc_mapF) +
+  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
+
+rat_mapM <- ggmap(nyc_mapM) +
+  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "coral3")
+
+rat_map
+rat_mapF
+rat_mapM
+
+
+ratHealthScore_map <- ggmap(nyc_map) +
+  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")+
+  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.01, alpha=0.2) +
+  scale_color_distiller(palette = "Spectral")
+
+ratHealthScore_mapF <- ggmap(nyc_mapF) +
+  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")+
+  geom_point(data=healthSubsetF, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.01, alpha=0.2) +
+  scale_color_distiller(palette = "Spectral")
+
+ratHealthScore_mapM <- ggmap(nyc_mapM) +
+  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "coral3") +
+  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.01, alpha=0.2) + 
+  scale_color_distiller(palette = "Spectral") + 
+  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
+
+ratHealthScore_map
+ratHealthScore_mapF
+ratHealthScore_mapM
 ```
