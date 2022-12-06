@@ -3,12 +3,12 @@ title:  36-315 Final Project Data Pre-analysis
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
+  pdf_document:
+    toc: yes
 urlcolor: blue
 ---
 
@@ -90,9 +90,9 @@ nyc_mapFPolygon <- ggmap(nyc_mapF) +
 nyc_mapMPolygon <- ggmap(nyc_mapM) + 
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
 
-nyc_mapPolygon
-nyc_mapMPolygon
-nyc_mapFPolygon
+# nyc_mapPolygon
+# nyc_mapMPolygon
+# nyc_mapFPolygon
 ```
 
 ```{r}
@@ -105,9 +105,9 @@ ratSubsetM <- subset(rats, Longitude<rightM & Latitude<topM & Longitude > leftM 
 health_inspection[, c("SCORE")] <- sapply(health_inspection[, c("SCORE")], as.integer)
 health_inspection["SCORE"][is.na(health_inspection["SCORE"])] <- 0
 
-healthSubset <- subset(health_inspection, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom & SCORE>30)
-healthSubsetF <- subset(health_inspection, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF & SCORE>30)
-healthSubsetM <- subset(health_inspection, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM & SCORE>30)
+healthSubset <- subset(health_inspection, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom & SCORE>50)
+healthSubsetF <- subset(health_inspection, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF & SCORE>50)
+healthSubsetM <- subset(health_inspection, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM & SCORE>50)
 
 rat_map <- ggmap(nyc_map) +
   geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
@@ -116,37 +116,39 @@ rat_mapF <- ggmap(nyc_mapF) +
   geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
 
 rat_mapM <- ggmap(nyc_mapM) +
-  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "coral3")
+  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
 
-rat_map
-rat_mapF
-rat_mapM
+# rat_map
+# rat_mapF
+# rat_mapM
 
 
 ratHealthScore_map <- ggmap(nyc_map) +
   geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
-  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE^2), size = 0.01, alpha=0.2) +
+  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
   scale_color_distiller(palette = "PiYG")
 
 ratHealthScore_mapF <- ggmap(nyc_mapF) +
   geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
-  geom_point(data=healthSubsetF, aes(x=Longitude, y = Latitude, color = SCORE^2), size = 0.01, alpha=0.2) +
+  geom_point(data=healthSubsetF, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
   scale_color_distiller(palette = "PiYG")
 
 ratHealthScore_mapM <- ggmap(nyc_mapM) +
   geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "chocolate3") +
-  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE^2), size = 0.01, alpha=0.2) + 
+  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) + 
   scale_color_distiller(palette = "PiYG") + 
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
 
-ratHealthScore_map
-ratHealthScore_mapF
+# ratHealthScore_map
+# ratHealthScore_mapF
 ratHealthScore_mapM
 ```
 
 
 ```{r}
-#I want to now do a correlation between "region" and (rat count/area of region). nyc_neighborhoods_df is stored in the same way as states are in HW09
+#I want to now do a correlation between "region" and (rat count/area of region). nyc_neighborhoods_df is stored in the same way as states are in HW09.
+
+#should also do proportion of "bad restaurants" to "good restaurants" per region
 ```
 
 
