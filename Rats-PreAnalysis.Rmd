@@ -148,3 +148,113 @@ ratHealthScore_mapM
 ```{r}
 #I want to now do a correlation between "region" and (rat count/area of region). nyc_neighborhoods_df is stored in the same way as states are in HW09
 ```
+
+
+
+```{r}
+
+# Liz's Graph 1 EDA
+# rats is the unedited version of the dataset !!
+# rats = read.csv(file = "Rat_Data.csv")
+rats = subset(rats, select = -c(Agency, Agency.Name, Complaint.Type, Descriptor,
+                                Vehicle.Type, Taxi.Company.Borough, 
+                                Taxi.Pick.Up.Location , Bridge.Highway.Name, 
+                                Bridge.Highway.Direction, Road.Ramp, 
+                                Bridge.Highway.Segment, Facility.Type, 
+                                Park.Facility.Name))
+
+
+library(dplyr)
+library(magrittr)
+library(knitr)
+private = c(
+  "1-2 Family Dwelling",
+  "1-2 Family Mixed Use Building", 
+  "1-2 FamilyDwelling", 
+  "1-3 Family Dwelling", 
+  "1-3 Family Mixed Use Building", 
+  "3+ Family Apartment Building", 
+  "3+ Family Apt", 
+  "3+ Family Apt.", 
+  "3+ Family Apt. Building", 
+  "3+ Family Mixed Use Building",
+  "3+Family Apt.", 
+  "Apartment",
+  "Private House",
+  "Residence",
+  "Residential Building",
+  "Residential Property",
+  "Single Room Occupancy (SRO)"
+)
+
+commercial = c(
+  "Cafeteria - Public School",
+  "Catering Service", 
+  "Commercial Building", 
+  "Commercial Property", 
+  "Construction Site", 
+  "Day Care/Nursery", 
+  "Government Building", 
+  "Grocery Store",
+  "Hospital",
+  "Office Building", 
+  "Restaurant", 
+  "Restaurant/Bar/Deli/Bakery", 
+  "Retail Store", 
+  "School", 
+  "School/Pre-School",
+  "Store",
+  "Street Fair Vendor", 
+  "Summer Camp"
+)
+
+public = c(
+ "Abandoned Building", 
+ "Beach", 
+ "Building (Non-Residential)", 
+ "Catch Basin/Sewer",
+ "Ground",
+ "Parking Lot/Garage",
+ "Public Garden", 
+ "Public Stairs",
+ "Street Area", 
+ "Vacant Building", 
+ "Vacant Lot", 
+ "Vacant Lot/Property"
+)
+
+other = c(
+  "",
+  "N/A",
+  "Other",
+  "Other (Explain Below)"
+)
+
+rats$Location.Type[rats$Location.Type %in% private] <- "Private"
+rats$Location.Type[rats$Location.Type %in% public] <- "Public"
+rats$Location.Type[rats$Location.Type %in% commercial] <- "Commercial"
+rats$Location.Type[rats$Location.Type %in% other] <- "Other"
+rats$Location.Type <- factor(rats$Location.Type)
+rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
+
+rats_per_day = rats %>% 
+  group_by(Date, Location.Type) %>%
+  tally() 
+
+names(rats_per_day) = c("date", "locationtype", "n_rats")
+
+library(tidyverse)
+ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
+  geom_line(alpha=0.3) + labs(
+    title="Number of Rats Recorded on Each Day", 
+    subtitle="colored by the type of location",
+    x="Date", 
+    y="Number of Rats Recorded"
+  ) + 
+  scale_color_manual("Location Type", 
+                     values = c("Other" = "yellow", 
+                                "Commercial" = "blue", 
+                                "Private" = "red", 
+                                "Public" = "green")) 
+
+```
