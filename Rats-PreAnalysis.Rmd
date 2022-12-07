@@ -258,3 +258,36 @@ ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) +
                                 "Public" = "green")) 
 
 ```
+
+
+```
+
+# DO NOT RUN THIS CHUNK! saving this here just to show how the rats with districts are tagged
+
+findDist <- function(lon, lat) {
+  finalres = "COULD NOT IDENTIFY"
+  for (x in 1:59) {
+    tib = shape[x, 1]
+    dist = tib$district
+    poly = tib$geometry
+    pt = st_point(c(lon, lat))
+    res = summary(st_within(pt, poly))
+    
+    
+    if (res[1] == "1") {
+      finalres <- dist
+    } 
+  }
+  
+  return(finalres)
+}
+
+for (i in 1:range(nrow(rats2017))[1]) {
+  rats$District[i] = findDist(rats$Longitude[i], rats$Latitude[i])
+}
+rats = subset(rats, District != "COULD NOT IDENTIFY")
+write.csv(rats, "rats_district_tagged.csv", row.names=FALSE)
+
+
+```
+
