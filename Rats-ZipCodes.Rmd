@@ -1,0 +1,72 @@
+---
+title:  36-315 Final Project Data Pre-analysis 
+author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
+date:  November 18, 2022 
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  pdf_document:
+    toc: yes
+urlcolor: blue
+---
+
+# Rat Sighting Dataset - Data Pre-analysis
+
+```{r, message = FALSE} 
+# library imports
+
+library(tigris)
+library(dplyr)
+library(leaflet)
+library(tidyverse)
+library(sp)
+library(ggmap)
+library(maptools)
+library(broom)
+library(httr)
+library(rgdal)
+library(gridExtra)
+library(stringr)
+library(geosphere)
+library(gpclib)
+library(broom)
+library(geojsonio)
+
+```
+
+
+
+```{r, include=FALSE}
+rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
+
+# clean up rat dataset (remove empty/useless columns)
+# rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
+
+# NEW FOR THIS FILE: removing NA's for zipcodes
+rats = subset(rats, !is.na(Incident.Zip), Incident.Zip != "")
+
+nyczips <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
+nyczips <- tidy(nyczips, region = "postalCode")
+
+ratsumzip = rats %>% group_by(Incident.Zip) %>% tally()
+nyczips = nyczips %>% left_join(., ratsumzip, by = c("id" = "Incident.Zip"))
+nyczips = subset(nyczips, !is.na(n))
+
+```
+
+```{r}
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n)) +
+  theme_void() +
+  scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
+  coord_map() + labs(
+    title = "Rat Sightings by Zip Code", 
+    fill = "Number of Rat Sightings"
+  )
+
+```
+
+
