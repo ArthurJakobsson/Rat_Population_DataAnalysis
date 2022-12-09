@@ -42,6 +42,30 @@ health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspect
 # # https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
 drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
 # # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+
+knicks <- read.csv(file = 'Raw/knicks.csv')
+# @ALEX
+
+tax2019 <- read.csv(file = 'Raw/nyc2019taxreturns.csv')
+# @ALEX
+
+pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
+# @ALEX
+
+barLoc <- read.csv(file = 'Raw/nycbarlocations.csv')
+# @ALEX
+
+dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
+# @ALEX
+
+filmLoc <- read.csv(file = 'Raw/nycfilmlocations.csv')
+# @ALEX
+
+zipcodenames <- read.csv(file = 'Raw/zipcodenames.csv')
+
+
+
+
 subway_entrances <- read.csv(file = 'Raw/SubwayEntrances.csv')
 subway_entrances <- subway_entrances %>% add_column(longitude = NA)
 subway_entrances <- subway_entrances %>% add_column(latitude = NA)
