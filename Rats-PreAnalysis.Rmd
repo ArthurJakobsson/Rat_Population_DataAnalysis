@@ -62,7 +62,7 @@ nyc_neighborhoods <- readOGR(content(r,'text'), 'OGRGeoJSON', verbose = F)
 # 
 # 
 # # clean up rat dataset (remove empty/useless columns)
-rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
+# rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
 # # clean up health inspection dataset (remove empty/useless columns)
 health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))
 ```
@@ -215,7 +215,32 @@ ratSubway_mapF
 #should also do proportion of "bad restaurants" to "good restaurants" per region
 ```
 
-
+```{r}
+# Alex's Rats Visualization
+rats = subset(rats, rats$Borough != "Unspecified")
+rats_fam = subset(rats, grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_fam$simple = ifelse(grepl("1-2", rats_fam$Location.Type, fixed = TRUE), "1-2 Family", "3+ Families")
+rats_other = subset(rats, !grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_other = rats_other %>% group_by(Location.Type) %>% filter(n() > 300 )
+family = ggplot(data = rats_fam, aes(x = Borough)) + 
+geom_bar(aes(fill = simple)) + 
+labs(
+title = "Rat Sightings Count for Family Dwellings",
+x = "Borough",
+y = "Count",
+fill = "Number of Families"
+)
+non_family = ggplot(data = rats_other, aes(x = Borough)) + 
+geom_bar(aes(fill = Location.Type)) + 
+labs(
+title = "Rat Sightings Count for Non-Family Dwellings",
+subtitle = "Must have at least 300 sightings per location type",
+x = "Borough",
+y = "Count",
+fill = "Location Type"
+)
+grid.arrange(family, non_family, nrow = 2)
+```
 
 ```{r}
 
@@ -325,6 +350,31 @@ ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) +
 
 ```
 
+dts <- strptime(time, "%I:%M:%S %p")
+dts <- format(dts,format="%I:%M:%S %p")
+actual_dates_vector <- c(actual_dates_vector,dts)
+
+```{r}
+dts <- strptime(rats$Time[1], "%I:%M:%S %p")
+dts
+substr(dts[1], 11,13)
+```
+
+
+```{r}
+library(stringr)
+library(ggplot2)
+rats$Time = word(rats$Created.Date, start = 2, end = 3)
+rats$Hour = as.numeric(substr(strptime(rats$Time, "%I:%M:%S %p"), 11,13))
+ggplot(data=rats, aes(x=Hour)) +
+  geom_bar(fill="cornflowerblue") +
+  labs(x="Hour of the day", y="Number of rat reportings", title="Number of rat sightings by hour of day")
+```
+
+```{r}
+head(rats)
+```
+
 
 ```
 
@@ -356,4 +406,17 @@ write.csv(rats, "rats_district_tagged.csv", row.names=FALSE)
 
 
 ```
+
+```{r}
+# Kevin's Bar chart of rats given borough
+borough.counts <- as.data.frame(table(rats$Borough))
+names(borough.counts) = c("Borough","Count")
+borough.counts <- rownames_to_column(borough.counts)
+borough.counts <- borough.counts %>%  filter(!row_number() %in% c(1))
+borough.counts
+ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
+  geom_col(aes(fill=Borough))
+```
+
+
 
