@@ -85,9 +85,8 @@ nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
 
 ```
 
-```{r, fig.width = 10}
+```{r}
 
-par(mfrow=c(1,2))
 ggplot() +
   geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rest_to_rat)) +
   theme_void() + 
