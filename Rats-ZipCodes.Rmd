@@ -3,12 +3,12 @@ title:  36-315 Final Project Data Pre-analysis
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
-  pdf_document:
-    toc: yes
 urlcolor: blue
 ---
 
@@ -53,18 +53,54 @@ nyczips <- tidy(nyczips, region = "postalCode")
 ratsumzip = rats %>% group_by(Incident.Zip) %>% tally()
 nyczips = nyczips %>% left_join(., ratsumzip, by = c("id" = "Incident.Zip"))
 nyczips = subset(nyczips, !is.na(n))
+colnames(nyczips)[8] = "n_rats"
 
 ```
 
 ```{r}
 
 ggplot() +
-  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n)) +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rats)) +
   theme_void() +
-  scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
+  # scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
   coord_map() + labs(
     title = "Rat Sightings by Zip Code", 
     fill = "Number of Rat Sightings"
+  )
+
+```
+
+```{r}
+
+rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv")
+restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
+
+nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
+colnames(nyczips)[9] = "n_rest"
+
+nyczips = subset(nyczips, !is.na(n_rest))
+
+nyczips$rest_to_rat = nyczips$n_rest / nyczips$n_rats
+nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
+
+```
+
+```{r}
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rest_to_rat)) +
+  theme_void() + 
+  coord_map() + labs(
+    title = "Restaurant to Rat Ratio by Zip Code", 
+    fill = "Number of Restaurants / Number of Rats"
+  )
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_to_rest)) +
+  theme_void() +
+  coord_map() + labs(
+    title = "Rat to Restaurant Ratio by Zip Code", 
+    fill = "Number of Rats / Number of Restaurants"
   )
 
 ```
