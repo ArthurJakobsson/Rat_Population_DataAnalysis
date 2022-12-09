@@ -163,20 +163,33 @@ Pre-analysis}\label{rat-sighting-dataset---data-pre-analysis}}
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(leaflet)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching packages --------------------------------------- tidyverse 1.3.2 --
+\end{verbatim}
+
+\begin{verbatim}
+## v ggplot2 3.4.0     v purrr   0.3.5
+## v tibble  3.1.8     v stringr 1.4.1
+## v tidyr   1.2.1     v forcats 0.5.2
+## v readr   2.1.3     
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(sp)}
 \FunctionTok{library}\NormalTok{(ggmap)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Loading required package: ggplot2
-\end{verbatim}
-
-\begin{verbatim}
 ## i Google's Terms of Service: <]8;;https://mapsplatform.google.comhttps://mapsplatform.google.com]8;;>
-\end{verbatim}
-
-\begin{verbatim}
 ## i Please cite ggmap if you use it! Use `citation("ggmap")` for details.
 \end{verbatim}
 
@@ -229,9 +242,7 @@ Pre-analysis}\label{rat-sighting-dataset---data-pre-analysis}}
 \begin{verbatim}
 ## 
 ## Attaching package: 'gridExtra'
-\end{verbatim}
-
-\begin{verbatim}
+## 
 ## The following object is masked from 'package:dplyr':
 ## 
 ##     combine
@@ -239,56 +250,9 @@ Pre-analysis}\label{rat-sighting-dataset---data-pre-analysis}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{rats }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\AttributeTok{file =} \StringTok{\textquotesingle{}Raw/Rat\_Sightings.csv\textquotesingle{}}\NormalTok{)}
-\CommentTok{\# https://data.cityofnewyork.us/widgets/g642{-}4e55?mobile\_redirect=true}
-\NormalTok{health\_inspection }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\AttributeTok{file =} \StringTok{\textquotesingle{}Raw/DOHMH\_New\_York\_City\_Restaurant\_Inspection\_Results.csv\textquotesingle{}}\NormalTok{) }
-\CommentTok{\# https://data.cityofnewyork.us/Health/DOHMH{-}New{-}York{-}City{-}Restaurant{-}Inspection{-}Results/rs6k{-}p7g6}
-\NormalTok{drinking\_water\_inspection }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\AttributeTok{file =} \StringTok{\textquotesingle{}Raw/Self{-}Reported\_Drinking\_Water\_Tank\_Inspection\_Results.csv\textquotesingle{}}\NormalTok{)}
-\CommentTok{\# https://data.cityofnewyork.us/Health/Self{-}Reported{-}Drinking{-}Water{-}Tank{-}Inspection{-}Resul/gjm4{-}k24g/data }
-
-\CommentTok{\#NYC map lines}
-\NormalTok{r }\OtherTok{\textless{}{-}} \FunctionTok{GET}\NormalTok{(}\StringTok{\textquotesingle{}http://data.beta.nyc//dataset/0ff93d2d{-}90ba{-}457c{-}9f7e{-}39e47bf2ac5f/resource/35dd04fb{-}81b3{-}479b{-}a074{-}a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson\textquotesingle{}}\NormalTok{)}
-\NormalTok{nyc\_neighborhoods }\OtherTok{\textless{}{-}} \FunctionTok{readOGR}\NormalTok{(}\FunctionTok{content}\NormalTok{(r,}\StringTok{\textquotesingle{}text\textquotesingle{}}\NormalTok{), }\StringTok{\textquotesingle{}OGRGeoJSON\textquotesingle{}}\NormalTok{, }\AttributeTok{verbose =}\NormalTok{ F)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{verbatim}
-## No encoding supplied: defaulting to UTF-8.
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: OGR support is provided by the sf and terra packages among others
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# https://rpubs.com/jhofman/nycmaps}
-
-
-\CommentTok{\# clean up rat dataset (remove empty/useless columns)}
-\NormalTok{rats }\OtherTok{=} \FunctionTok{subset}\NormalTok{(rats, }\AttributeTok{select =} \SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )}
-\CommentTok{\# clean up health inspection dataset (remove empty/useless columns)}
-\NormalTok{health\_inspection }\OtherTok{=} \FunctionTok{subset}\NormalTok{(health\_inspection, }\AttributeTok{select =} \SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))}
+\FunctionTok{library}\NormalTok{(stringr)}
+\FunctionTok{library}\NormalTok{(geosphere)}
+\CommentTok{\# distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -416,15 +380,64 @@ Pre-analysis}\label{rat-sighting-dataset---data-pre-analysis}}
   \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data=}\NormalTok{ratSubsetM, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Longitude, }\AttributeTok{y =}\NormalTok{ Latitude), }\AttributeTok{alpha=}\FloatTok{0.2}\NormalTok{, }\AttributeTok{size =}\FloatTok{0.1}\NormalTok{, }\AttributeTok{color =} \StringTok{"chocolate3"}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data=}\NormalTok{healthSubsetM, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Longitude, }\AttributeTok{y =}\NormalTok{ Latitude, }\AttributeTok{color =}\NormalTok{ SCORE), }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{alpha=}\FloatTok{0.2}\NormalTok{) }\SpecialCharTok{+} 
   \FunctionTok{scale\_color\_distiller}\NormalTok{(}\AttributeTok{palette =} \StringTok{"PiYG"}\NormalTok{) }\SpecialCharTok{+} 
-  \FunctionTok{geom\_polygon}\NormalTok{(}\AttributeTok{data=}\NormalTok{nyc\_neighborhoods\_df, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{long, }\AttributeTok{y=}\NormalTok{lat, }\AttributeTok{group=}\NormalTok{group), }\AttributeTok{color=}\StringTok{"blue"}\NormalTok{, }\AttributeTok{fill=}\ConstantTok{NA}\NormalTok{)}
-
-\CommentTok{\# ratHealthScore\_map}
-\CommentTok{\# ratHealthScore\_mapF}
-\NormalTok{ratHealthScore\_mapM}
+  \FunctionTok{geom\_polygon}\NormalTok{(}\AttributeTok{data=}\NormalTok{nyc\_neighborhoods\_df, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{long, }\AttributeTok{y=}\NormalTok{lat, }\AttributeTok{group=}\NormalTok{group), }\AttributeTok{color=}\StringTok{"blue"}\NormalTok{, }\AttributeTok{fill=}\StringTok{"white"}\NormalTok{, }\AttributeTok{alpha=}\FloatTok{0.3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Rats-PreAnalysis_files/figure-latex/unnamed-chunk-4-1.pdf}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ratSubsetM \textless{}{-} subset(rats, Longitude\textless{}rightM \& Latitude\textless{}topM \& Longitude \textgreater{} leftM \& Latitude \textgreater{}bottomM)}
+
+\NormalTok{ratSubway\_mapF }\OtherTok{\textless{}{-}} \FunctionTok{ggmap}\NormalTok{(nyc\_mapF) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data=}\NormalTok{ratSubsetF, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Longitude, }\AttributeTok{y =}\NormalTok{ Latitude), }\AttributeTok{alpha=}\FloatTok{0.05}\NormalTok{, }\AttributeTok{size =}\FloatTok{0.1}\NormalTok{, }\AttributeTok{color =} \StringTok{"chocolate3"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data=}\NormalTok{subway\_entrances, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{longitude, }\AttributeTok{y =}\NormalTok{ latitude), }\AttributeTok{color=}\StringTok{"red"}\NormalTok{,  }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{alpha=}\FloatTok{0.5}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_color\_distiller}\NormalTok{(}\AttributeTok{palette =} \StringTok{"PiYG"}\NormalTok{) }\CommentTok{\# + }
+  \CommentTok{\# geom\_polygon(data=nyc\_neighborhoods\_df, aes(x=long, y=lat, group=group), color="blue", fill=NA, alpha=0.3)}
+
+\CommentTok{\# ratHealthScore\_map}
+\CommentTok{\# ratHealthScore\_mapF}
+\CommentTok{\# ratHealthScore\_mapM}
+\NormalTok{ratSubway\_mapF}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 351 rows containing missing values (`geom_point()`).
+\end{verbatim}
+
+\includegraphics{Rats-PreAnalysis_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# system.time(\{}
+\CommentTok{\# minSubwayDist = function(longitude, latitude)}
+\CommentTok{\# \{}
+\CommentTok{\#   min =  as.integer(.Machine$integer.max)}
+\CommentTok{\#   for (i in (1:nrow(subway\_entrances)))}
+\CommentTok{\#   \{}
+\CommentTok{\#     distance = distm(c(longitude, latitude), c(longs[i], lats[i]), fun = distHaversine)[1]}
+\CommentTok{\#     if(distance\textless{}min)}
+\CommentTok{\#     \{}
+\CommentTok{\#       min=distance}
+\CommentTok{\#     \}}
+\CommentTok{\#   \}}
+\CommentTok{\#   return(min)}
+\CommentTok{\# \}}
+\CommentTok{\# }
+\CommentTok{\# ratSubsetM \textless{}{-} ratSubsetM \%\textgreater{}\% drop\_na(Longitude)}
+\CommentTok{\# ratSubsetM \textless{}{-} ratSubsetM \%\textgreater{}\% drop\_na(Latitude)}
+\CommentTok{\# \# ratsub = rats[1:100,]}
+\CommentTok{\# ratSubsetM \textless{}{-} ratSubsetM \%\textgreater{}\% add\_column(minSubwayDistance = NA)}
+\CommentTok{\# }
+\CommentTok{\# mindists = 1:nrow(ratSubsetM)}
+\CommentTok{\# for(i in (1:nrow(ratSubsetM)))}
+\CommentTok{\# \{}
+\CommentTok{\#   mindists[i] = minSubwayDist(ratSubsetM$Longitude[i], ratSubsetM$Latitude[i])}
+\CommentTok{\# \}}
+\CommentTok{\# ratSubsetM$minSubwayDistance = mindists}
+\CommentTok{\# \})}
+\end{Highlighting}
+\end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]

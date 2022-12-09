@@ -20,6 +20,7 @@ urlcolor: blue
 library(tigris)
 library(dplyr)
 library(leaflet)
+library(tidyverse)
 library(sp)
 library(ggmap)
 library(maptools)
@@ -27,27 +28,46 @@ library(broom)
 library(httr)
 library(rgdal)
 library(gridExtra)
+library(stringr)
+library(geosphere)
+# distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
-```{r}
-rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
-# https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
-health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv') 
-# https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
-drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
-# https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
 
-#NYC map lines
+
+```{r, include=FALSE}
+rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
+# # https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
+health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv')
+# # https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
+drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
+# # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+subway_entrances <- read.csv(file = 'Raw/SubwayEntrances.csv')
+subway_entrances <- subway_entrances %>% add_column(longitude = NA)
+subway_entrances <- subway_entrances %>% add_column(latitude = NA)
+lats = 1:nrow(subway_entrances)
+longs = 1:nrow(subway_entrances)
+for (i in (1:nrow(subway_entrances))) {
+  longs[i] = as.numeric(sub(".", "", scan(text = subway_entrances$the_geom[i], what = "")[2]))
+  lats [i] = as.numeric(str_sub(scan(text = subway_entrances$the_geom[i], what = "")[3],1,-2))
+}
+subway_entrances$longitude = longs
+subway_entrances$latitude = lats
+
+# 
+# #NYC map lines
 r <- GET('http://data.beta.nyc//dataset/0ff93d2d-90ba-457c-9f7e-39e47bf2ac5f/resource/35dd04fb-81b3-479b-a074-a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson')
 nyc_neighborhoods <- readOGR(content(r,'text'), 'OGRGeoJSON', verbose = F)
-# https://rpubs.com/jhofman/nycmaps
-
-
-# clean up rat dataset (remove empty/useless columns)
+# # https://rpubs.com/jhofman/nycmaps
+# 
+# 
+# # clean up rat dataset (remove empty/useless columns)
 rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
-# clean up health inspection dataset (remove empty/useless columns)
+# # clean up health inspection dataset (remove empty/useless columns)
 health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))
 ```
+
+
 
 
 ```{r}
@@ -137,13 +157,57 @@ ratHealthScore_mapM <- ggmap(nyc_mapM) +
   geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "chocolate3") +
   geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) + 
   scale_color_distiller(palette = "PiYG") + 
-  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
+  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill="white", alpha=0.3)
+
+```
+
+```{r}
+
+# ratSubsetM <- subset(rats, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM)
+
+ratSubway_mapF <- ggmap(nyc_mapF) +
+  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.05, size =0.1, color = "chocolate3") +
+  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 1, alpha=0.5) + 
+  scale_color_distiller(palette = "PiYG") # + 
+  # geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA, alpha=0.3)
 
 # ratHealthScore_map
 # ratHealthScore_mapF
-ratHealthScore_mapM
+# ratHealthScore_mapM
+ratSubway_mapF
 ```
 
+
+
+```{r}
+# system.time({
+# minSubwayDist = function(longitude, latitude)
+# {
+#   min =  as.integer(.Machine$integer.max)
+#   for (i in (1:nrow(subway_entrances)))
+#   {
+#     distance = distm(c(longitude, latitude), c(longs[i], lats[i]), fun = distHaversine)[1]
+#     if(distance<min)
+#     {
+#       min=distance
+#     }
+#   }
+#   return(min)
+# }
+# 
+# ratSubsetM <- ratSubsetM %>% drop_na(Longitude)
+# ratSubsetM <- ratSubsetM %>% drop_na(Latitude)
+# # ratsub = rats[1:100,]
+# ratSubsetM <- ratSubsetM %>% add_column(minSubwayDistance = NA)
+# 
+# mindists = 1:nrow(ratSubsetM)
+# for(i in (1:nrow(ratSubsetM)))
+# {
+#   mindists[i] = minSubwayDist(ratSubsetM$Longitude[i], ratSubsetM$Latitude[i])
+# }
+# ratSubsetM$minSubwayDistance = mindists
+# })
+```
 
 ```{r}
 #I want to now do a correlation between "region" and (rat count/area of region). nyc_neighborhoods_df is stored in the same way as states are in HW09.
@@ -158,12 +222,12 @@ ratHealthScore_mapM
 # Liz's Graph 1 EDA
 # rats is the unedited version of the dataset !!
 # rats = read.csv(file = "Rat_Data.csv")
-rats = subset(rats, select = -c(Agency, Agency.Name, Complaint.Type, Descriptor,
-                                Vehicle.Type, Taxi.Company.Borough, 
-                                Taxi.Pick.Up.Location , Bridge.Highway.Name, 
-                                Bridge.Highway.Direction, Road.Ramp, 
-                                Bridge.Highway.Segment, Facility.Type, 
-                                Park.Facility.Name))
+# rats = subset(rats, select = -c(Agency, Agency.Name, Complaint.Type, Descriptor,
+#                                 Vehicle.Type, Taxi.Company.Borough, 
+#                                 Taxi.Pick.Up.Location , Bridge.Highway.Name, 
+#                                 Bridge.Highway.Direction, Road.Ramp, 
+#                                 Bridge.Highway.Segment, Facility.Type, 
+#                                 Park.Facility.Name))
 
 
 library(dplyr)
