@@ -30,6 +30,7 @@ library(rgdal)
 library(gridExtra)
 library(stringr)
 library(geosphere)
+library(vcd)
 # distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
@@ -43,28 +44,25 @@ health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspect
 drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
 # # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
 
-knicks <- read.csv(file = 'Raw/knicks.csv')
-# @ALEX
-
-tax2019 <- read.csv(file = 'Raw/nyc2019taxreturns.csv')
-# @ALEX
-
-pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
-# @ALEX
-
-barLoc <- read.csv(file = 'Raw/nycbarlocations.csv')
-# @ALEX
-
-dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
-# @ALEX
-
-filmLoc <- read.csv(file = 'Raw/nycfilmlocations.csv')
-# @ALEX
-
-zipcodenames <- read.csv(file = 'Raw/zipcodenames.csv')
-
-
-
+# knicks <- read.csv(file = 'Raw/knicks.csv')
+# # @ALEX
+# 
+# tax2019 <- read.csv(file = 'Raw/nyc2019taxreturns.csv')
+# # @ALEX
+# 
+# pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
+# # @ALEX
+# 
+# barLoc <- read.csv(file = 'Raw/nycbarlocations.csv')
+# # @ALEX
+# 
+# dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
+# # @ALEX
+# 
+# filmLoc <- read.csv(file = 'Raw/nycfilmlocations.csv')
+# # @ALEX
+# 
+# zipcodenames <- read.csv(file = 'Raw/zipcodenames.csv')
 
 subway_entrances <- read.csv(file = 'Raw/SubwayEntrances.csv')
 subway_entrances <- subway_entrances %>% add_column(longitude = NA)
@@ -239,15 +237,27 @@ ratSubway_mapF
 #should also do proportion of "bad restaurants" to "good restaurants" per region
 ```
 
+
 ```{r}
-# Alex's Rats Visualization
+# Family/Non-family Rats Visualization: subsetting
 rats = subset(rats, rats$Borough != "Unspecified")
 rats_fam = subset(rats, grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_fam = subset(rats_fam, (Borough == "BRONX" | Borough == "BROOKLYN" | Borough == "MANHATTAN" | Borough == "QUEENS" | Borough == "STATEN ISLAND"))
 rats_fam$simple = ifelse(grepl("1-2", rats_fam$Location.Type, fixed = TRUE), "1-2 Family", "3+ Families")
+
 rats_other = subset(rats, !grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_other = subset(rats_other, Location.Type != "Other (Explain Below)")
+rats_other = subset(rats_other, Location.Type != "Street Area")
+rats_other = subset(rats_other, (Borough == "BRONX" | Borough == "BROOKLYN" | Borough == "MANHATTAN" | Borough == "QUEENS" | Borough == "STATEN ISLAND"))
 rats_other = rats_other %>% group_by(Location.Type) %>% filter(n() > 300 )
-family = ggplot(data = rats_fam, aes(x = Borough)) + 
-geom_bar(aes(fill = simple)) + 
+rats_other["Location.Type"][rats_other["Location.Type"] == "Vacant Building" | rats_other["Location.Type"] == "Vacant Lot"] <- "Unoccupied"
+rats_other["Location.Type"][rats_other["Location.Type"] == "Government Building" | rats_other["Location.Type"] == "Commercial Building"] <- "Office Building"
+```
+
+```{r}
+# fam/non-fam visualization
+family = ggplot(data = rats_fam, aes(x = Borough)) +
+geom_bar(aes(fill = simple)) +
 labs(
 title = "Rat Sightings Count for Family Dwellings",
 x = "Borough",
@@ -265,6 +275,12 @@ fill = "Location Type"
 )
 grid.arrange(family, non_family, nrow = 2)
 ```
+```{r}
+par(mar = c(5,4,1,10))
+
+mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
+```
+
 
 ```{r}
 
