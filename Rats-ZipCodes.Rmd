@@ -1,14 +1,14 @@
 ---
-title:  36-315 Final Project Data Pre-analysis 
+title:  36-315 Final Project Zip Code  
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
+  pdf_document:
+    toc: yes
 urlcolor: blue
 ---
 
@@ -41,8 +41,6 @@ library(shiny)
 
 ```
 
-
-
 ```{r, include=FALSE}
 rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
 zipnames <- read.csv(file = 'Raw/zipcodenames.csv')
@@ -64,7 +62,7 @@ colnames(nyczips)[8] = "n_rats"
 
 ```{r}
 zipnames$ZipCode <- as.character(zipnames$ZipCode)
-
+zipnames = subset(zipnames, select = -c(X, X.1, X.2, X.3))
 nyczips = nyczips %>% left_join(., zipnames, by = c("id" = "ZipCode"))
 ```
 
@@ -77,12 +75,10 @@ p <- ggplot() +
     title = "Rat Sightings by Zip Code", 
     fill = "Number of Rat Sightings"
   )
-```
 
-```{r}
-ggplotly(p)
-```
+p
 
+```
 
 ```{r}
 
@@ -93,7 +89,7 @@ rest$SCORE = replace_na(rest$SCORE, 0)
 restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
 
 nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
-colnames(nyczips)[9] = "n_rest"
+colnames(nyczips)[11] = "n_rest"
 
 nyczips = subset(nyczips, !is.na(n_rest))
 
@@ -191,10 +187,9 @@ ggplot() +
 
 ```
 
-
 ```{r}
 
-
+# ggplotly(p)
 
 ```
 
