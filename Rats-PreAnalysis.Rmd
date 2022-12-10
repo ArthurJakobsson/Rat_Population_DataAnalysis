@@ -12,11 +12,13 @@ output:
 urlcolor: blue
 ---
 
-# Rat Sighting Dataset - Data Pre-analysis
+# Rat Sightings!
+
+#Loading in our Libraries
+Before we can do anything, we're going to load in all the libaries that we will use for the rest of the notebook. In the case that you find a new library you have to install, please do it in this large cell here rather than in assorted cells below.
 
 ```{r} 
 # library imports
-
 library(tigris)
 library(dplyr)
 library(leaflet)
@@ -29,13 +31,18 @@ library(httr)
 library(rgdal)
 library(gridExtra)
 library(stringr)
+library(ggseas)
 library(geosphere)
+library(stringr)
+library(hydroTSM)
 library(vcd)
 # distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
 
+#Loading In Data
 
+Our data will come from the 'Raw' folder, and will often come in the form of csv files. We will also do some map cleaning data in this cell so that it won't have to be done later. This cell should also onlybe loaded in once, and if there is new data to be loaded in please do so in this cell.
 ```{r, include=FALSE}
 rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
 # # https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
@@ -402,19 +409,61 @@ substr(dts[1], 11,13)
 
 
 ```{r}
-library(stringr)
 library(ggplot2)
 rats$Time = word(rats$Created.Date, start = 2, end = 3)
-rats$Hour = as.numeric(substr(strptime(rats$Time, "%I:%M:%S %p"), 11,13))
-ggplot(data=rats, aes(x=Hour)) +
+rats.time = subset(rats, Time != "12:00:00 AM")
+rats.time$Hour = as.numeric(substr(strptime(rats.time$Time, "%I:%M:%S %p"), 11,13))
+ggplot(data=rats.time, aes(x=Hour)) +
   geom_bar(fill="cornflowerblue") +
   labs(x="Hour of the day", y="Number of rat reportings", title="Number of rat sightings by hour of day")
 ```
 
 ```{r}
-head(rats)
-```
+library(ggplot2)
+rats_per_day = rats %>%
+  group_by(Date) %>%
+  tally()
 
+rats_per_day$Season = time2season(rats_per_day$Date, out.fmt = "seasons")
+ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
+  geom_line(alpha=0.3) + labs(
+    title="Number of Rats Recorded on Each Day",
+    subtitle="colored by the season",
+    x="Date",
+    y="Number of Rats Recorded"
+  ) +
+stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) +
+ggtitle("Width = 30")
+```
+```{r}
+dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
+dailyCovidtest = mutate(dailyCovid, date_of_interest = as.Date(date_of_interest, format = "%m/%d/%Y"))
+names(dailyCovidtest)[names(dailyCovidtest) == "date_of_interest"] <- "Date"
+covid_rats = inner_join(x = dailyCovidtest, y = rats_per_day, by = "Date")
+ggplot(data = covid_rats, aes(x = n, y = CASE_COUNT)) +
+geom_point()
+```
+```{r}
+#this is to remove outliers
+Q_covid <- quantile(covid_rats$CASE_COUNT, probs=c(.25, .75), na.rm = FALSE)
+iqr_covid <- IQR(covid_rats$CASE_COUNT)
+Q_rats <- quantile(covid_rats$n, probs=c(.25, .75), na.rm = FALSE)
+iqr_rats <- IQR(covid_rats$n)
+covid_rats.iqr = subset(covid_rats,
+                        CASE_COUNT < Q_covid[2] + 1.5*iqr_covid &
+                        CASE_COUNT > Q_covid[1] - 1.5*iqr_covid &
+                        n < Q_rats[2] + 1.5*iqr_rats &
+                        n > Q_rats[1] - 1.5*iqr_rats)
+#replotting without outliers
+ggplot(data = covid_rats.iqr, aes(x = n, y = CASE_COUNT)) +
+geom_point()
+```
+```{r}
+raw = lm(CASE_COUNT~n, data = covid_rats)
+no_outliers = lm(CASE_COUNT~n, data = covid_rats.iqr)
+summary(raw)
+summary(no_outliers)
+```
 
 ```
 
