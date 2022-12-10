@@ -33,6 +33,11 @@ library(geosphere)
 library(gpclib)
 library(broom)
 library(geojsonio)
+library(tidyverse)
+library(plotly)
+library(maps)
+library(reshape2)
+library(shiny)
 
 ```
 
@@ -40,6 +45,7 @@ library(geojsonio)
 
 ```{r, include=FALSE}
 rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
+zipnames <- read.csv(file = 'Raw/zipcodenames.csv')
 
 # clean up rat dataset (remove empty/useless columns)
 # rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
@@ -54,12 +60,16 @@ ratsumzip = rats %>% group_by(Incident.Zip) %>% tally()
 nyczips = nyczips %>% left_join(., ratsumzip, by = c("id" = "Incident.Zip"))
 nyczips = subset(nyczips, !is.na(n))
 colnames(nyczips)[8] = "n_rats"
-
 ```
 
 ```{r}
+zipnames$ZipCode <- as.character(zipnames$ZipCode)
 
-ggplot() +
+nyczips = nyczips %>% left_join(., zipnames, by = c("id" = "ZipCode"))
+```
+
+```{r}
+p <- ggplot() +
   geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rats)) +
   theme_void() +
   # scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
@@ -67,12 +77,19 @@ ggplot() +
     title = "Rat Sightings by Zip Code", 
     fill = "Number of Rat Sightings"
   )
-
 ```
+
+```{r}
+ggplotly(p)
+```
+
 
 ```{r}
 
 rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv")
+
+rest$SCORE = replace_na(rest$SCORE, 0)
+# rest = subset(rest, !is.na(SCORE))
 restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
 
 nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
@@ -83,26 +100,101 @@ nyczips = subset(nyczips, !is.na(n_rest))
 nyczips$rest_to_rat = nyczips$n_rest / nyczips$n_rats
 nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
 
+restscorezip = rest %>% group_by(ZIPCODE) %>% summarize(score_avg = mean(SCORE))
+nyczips = nyczips %>% left_join(., restscorezip, by = c("id" = "ZIPCODE"))
+
+nyczips$score_to_rat = nyczips$score_avg / nyczips$n_rats
+nyczips$rat_to_score = nyczips$n_rats / nyczips$score_avg
+
 ```
 
 ```{r}
 
+# SINGULAR VARIABLE ANALYSIS: # RATS, # RESTAURANTS, AVG RESTAURANT SCORE
 ggplot() +
-  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rest_to_rat)) +
-  theme_void() + 
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rats)) +
+  theme_void() +
+  # scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
   coord_map() + labs(
-    title = "Restaurant to Rat Ratio by Zip Code", 
-    fill = "Number of Restaurants / Number of Rats"
+    title = "Rat Sightings by Zip Code", 
+    fill = "# Rats"
   )
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rest)) +
+  theme_void() +
+  coord_map() + labs(
+    title = "Number of Restaurants by Zip Code", 
+    fill = "# Rest" 
+  )
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = score_avg)) +
+  theme_void() +
+  coord_map() + labs(
+    title = "Restaurant Scores by Zip Code", 
+    fill = "Avg Score"
+  )
+
+```
+
+```{r}
+
+# THROWN OUT: RESTAURANT TO RAT RATIOS 
+
+# ggplot() +
+#   geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rest_to_rat)) +
+#   theme_void() + 
+#   scale_fill_gradient2(low = "#395184",
+#                        mid = "#A964B8", 
+#                        high = "#FFA9A9", midpoint = 200) + 
+#   coord_map() + labs( 
+#     title = "Restaurant to Rat Ratio by Zip Code", 
+#     fill = "Number of Restaurants / Number of Rats"
+# )
 
 ggplot() +
   geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_to_rest)) +
   theme_void() +
+  scale_fill_gradient2(low = "#395184",
+                       mid = "#A964B8", 
+                       high = "#FFA9A9", midpoint = 3.5) + 
   coord_map() + labs(
     title = "Rat to Restaurant Ratio by Zip Code", 
     fill = "Number of Rats / Number of Restaurants"
   )
 
+# THROWN OUT: SCORE TO RAT RATIOS
+
+# ggplot() +
+#   geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = score_to_rat)) +
+#   theme_void() +
+#   scale_fill_gradient2(low = "#395184",
+#                        mid = "#A964B8", 
+#                        high = "#FFA9A9", midpoint = 10) + 
+#   coord_map() + labs(
+#     title = "Restaurant Score to Number of Rats by Zip Code", 
+#     fill = "Average Restaurant Score / Number of Rats"
+#   )
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_to_score)) +
+  theme_void() +
+  scale_fill_gradient2(low = "#395184",
+                       mid = "#A964B8", 
+                       high = "#FFA9A9", midpoint = 100) + 
+  coord_map() + labs(
+    title = "Number of Rats to Restaurant Score by Zip Code", 
+    fill = "Number of Rats / Average Restaurant Score"
+  )
+
+
 ```
 
+
+```{r}
+
+
+
+```
 
