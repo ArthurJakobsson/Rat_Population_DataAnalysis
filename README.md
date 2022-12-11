@@ -14,6 +14,10 @@ Our analysis primarily revolves around this dataset, with several supplementary 
 
 #### Subway Dataset
 
+https://data.cityofnewyork.us/Transportation/Subway-Entrances/drex-xx56
+
+This dataset contains the names, line numbers, and geographic coordinates of 1928 subways in New York City.
+
 <hr>
 
 ## Research Questions
