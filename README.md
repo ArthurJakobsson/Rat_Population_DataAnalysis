@@ -16,7 +16,13 @@ Our analysis primarily revolves around this dataset, with several supplementary 
 
 https://data.cityofnewyork.us/Transportation/Subway-Entrances/drex-xx56
 
-This dataset contains the names, line numbers, and geographic coordinates of 1928 subways in New York City.
+This dataset, also sourced from NYC Open Data, contains the names, line numbers, and geographic coordinates of 1928 subways in New York City to date.
+
+#### Tax Return Dataset
+
+This is an 2019 IRS-sourced dataset which contains tax return information for each of the 178 zip codes in NYC; namely, the number of returns and total amounts requested by eligible citizens of each of the zip codes for their individual tax returns.
+
+#### 
 
 <hr>
 
