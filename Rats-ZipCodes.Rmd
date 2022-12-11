@@ -3,12 +3,12 @@ title:  36-315 Final Project Zip Code
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
-  pdf_document:
-    toc: yes
 urlcolor: blue
 ---
 
@@ -44,9 +44,12 @@ library(shiny)
 ```{r, include=FALSE}
 rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
 zipnames <- read.csv(file = 'Raw/zipcodenames.csv')
+tax <- read.csv(file = "Raw/nyctax-cleaned.csv")
+pop <- read.csv(file = "Raw/nyc2022population.csv")
+rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv")
+bar <- read.csv(file = "Raw/nycbarlocations.csv")
+michelin <- read.csv(file = "Raw/nycmichelin.csv")
 
-# clean up rat dataset (remove empty/useless columns)
-# rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
 
 # NEW FOR THIS FILE: removing NA's for zipcodes
 rats = subset(rats, !is.na(Incident.Zip), Incident.Zip != "")
@@ -54,6 +57,7 @@ rats = subset(rats, !is.na(Incident.Zip), Incident.Zip != "")
 nyczips <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
 nyczips <- tidy(nyczips, region = "postalCode")
 
+# NUMBER OF RATS: n_rats
 ratsumzip = rats %>% group_by(Incident.Zip) %>% tally()
 nyczips = nyczips %>% left_join(., ratsumzip, by = c("id" = "Incident.Zip"))
 nyczips = subset(nyczips, !is.na(n))
@@ -66,41 +70,58 @@ zipnames = subset(zipnames, select = -c(X, X.1, X.2, X.3))
 nyczips = nyczips %>% left_join(., zipnames, by = c("id" = "ZipCode"))
 ```
 
-```{r}
-p <- ggplot() +
-  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rats)) +
-  theme_void() +
-  # scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
-  coord_map() + labs(
-    title = "Rat Sightings by Zip Code", 
-    fill = "Number of Rat Sightings"
-  )
-
-p
-
-```
-
-```{r}
-
-rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv")
+```{r, include = FALSE}
 
 rest$SCORE = replace_na(rest$SCORE, 0)
 # rest = subset(rest, !is.na(SCORE))
 restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
 
+# NUMBER OF RESTAURANTS: n_rest
 nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
 colnames(nyczips)[11] = "n_rest"
 
 nyczips = subset(nyczips, !is.na(n_rest))
 
+# RATIOS: rest_to_rat rat_to_rest
+# note: we decided to only use rat_to_rest as the other one has too small vals
 nyczips$rest_to_rat = nyczips$n_rest / nyczips$n_rats
 nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
 
+# AVERAGE RESTAURANT SCORE: score_avg
 restscorezip = rest %>% group_by(ZIPCODE) %>% summarize(score_avg = mean(SCORE))
 nyczips = nyczips %>% left_join(., restscorezip, by = c("id" = "ZIPCODE"))
 
+# RATIOS: score_to_rat rat_to_score
+# note: we decided to only use rat_to_score as the other one has too small vals
 nyczips$score_to_rat = nyczips$score_avg / nyczips$n_rats
 nyczips$rat_to_score = nyczips$n_rats / nyczips$score_avg
+
+# POPULATION: population
+# RATS PER CAPITA: rat_per_cap
+pop = subset(pop, population != 0)
+pop = subset(pop, select = c("zip", "population"))
+pop$zip = as.character(pop$zip)
+nyczips = nyczips %>% left_join(., pop, by = c("id" = "zip"))
+nyczips$rat_per_cap = nyczips$n_rats / nyczips$population
+
+tax = subset(tax, Zip.Code != 0 & Zip.Code != 99999)
+tax$Zip.Code = as.character(tax$Zip.Code)
+
+# this makes a tax rating (weighted average) score from 1 to 6, representing
+# the dist. of wealth among the brackets
+# NOTE FROM LIZ: this may be a really rarded way to get this info, open to other
+# smarter ideas for representing tax data with one number 
+tax$tax_rating = (tax$X.1.under..25.000 + 
+                    2 * tax$X.25.000.under..50.000 + 
+                    3 * tax$X.50.000.under..75.000 + 
+                    4 * tax$X.75.000.under..100.000 + 
+                    5 * tax$X.100.000.under..200.000 + 
+                    6 * tax$X.200.000.or.more) / tax$Total
+
+tax = subset(tax, select = c("Zip.Code", "tax_rating"))
+nyczips = nyczips %>% left_join(., tax, by = c("id" = "Zip.Code"))
+
+nyczips$rat_to_tax = nyczips$n_rats / nyczips$tax_rating
 
 ```
 
@@ -132,7 +153,42 @@ ggplot() +
     fill = "Avg Score"
   )
 
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = population)) +
+  theme_void() +
+  coord_map() + labs(
+    title = "Population by Zip Code", 
+    fill = "Population"
+  )
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = tax_rating)) +
+  theme_void() +
+  coord_map() + labs(
+    title = "Tax Rating by Zip Code", 
+    fill = "Tax Rating (from 1 to 6)"
+  )
+
 ```
+
+```{r}
+
+# rats per capita
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_per_cap)) +
+  theme_void() +
+  scale_fill_gradient2(low = "#395184",
+                       mid = "#A964B8", 
+                       high = "#FFA9A9", midpoint = 0.05) + 
+  coord_map() + labs(
+    title = "Rats Per Capita", 
+    fill = "Number of Rats / Population of Zip"
+  )
+
+
+```
+
 
 ```{r}
 
@@ -154,7 +210,7 @@ ggplot() +
   theme_void() +
   scale_fill_gradient2(low = "#395184",
                        mid = "#A964B8", 
-                       high = "#FFA9A9", midpoint = 3.5) + 
+                       high = "#FFA9A9", midpoint = 4) + 
   coord_map() + labs(
     title = "Rat to Restaurant Ratio by Zip Code", 
     fill = "Number of Rats / Number of Restaurants"
@@ -178,12 +234,25 @@ ggplot() +
   theme_void() +
   scale_fill_gradient2(low = "#395184",
                        mid = "#A964B8", 
-                       high = "#FFA9A9", midpoint = 100) + 
+                       high = "#FFA9A9", midpoint = 150) + 
   coord_map() + labs(
-    title = "Number of Rats to Restaurant Score by Zip Code", 
+    title = "Rats to Restaurant Score Ratio by Zip Code",
+    subtitle = "higher score = worse restaurant", 
     fill = "Number of Rats / Average Restaurant Score"
   )
 
+# tax bracket stuff 
+
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_to_tax)) +
+  theme_void() +
+  scale_fill_gradient2(low = "#395184",
+                       mid = "#A964B8", 
+                       high = "#FFA9A9", midpoint = 1500) + 
+  coord_map() + labs(
+    title = "Rat to Tax Rating Ratio by Zip Code", 
+    fill = "Number of Rats / Tax Rating (from 1 to 6)"
+  )
 
 ```
 
