@@ -57,6 +57,8 @@ drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_T
 
 mayors <- read.csv(file = 'Raw/mayors.csv')
 
+events <- read.csv(file = 'Raw/nycevents.csv')
+
 # knicks <- read.csv(file = 'Raw/knicks.csv')
 # # @ALEX
 # 
@@ -397,6 +399,7 @@ names(rats_per_day) = c("date", "locationtype", "n_rats")
 
 mayors$Date.Start <- as.Date(mayors$Date.Start)
 mayors$Date.End <- as.Date(mayors$Date.End)
+events$Date <- as.Date(events$Date)
 
 ggplot(rats_per_day) +
   geom_line(aes(date, n_rats, color=locationtype), alpha=0.3) + labs(
@@ -408,7 +411,7 @@ ggplot(rats_per_day) +
   scale_color_manual("Location Type", 
                      values = c("Other" = "yellow", 
                                 "Commercial" = "blue", 
-                                "Private" = "red", 
+                                "Private" = "orange", 
                                 "Public" = "green")) +
   geom_rect( 
     data = mayors,
@@ -424,6 +427,8 @@ ggplot(rats_per_day) +
     aes(x = Date.Start+60, y = 110, label = Name),
     data = mayors,
     size = 3, vjust = 0, hjust = 0, nudge_x = 50, angle = 90) +
+  geom_segment(data = events, aes(x = Date, y = 50, xend = Date, yend = 60), color = "red") +
+  geom_text(data = events, aes(x = Date, y = 100, label = Event.Name), angle=90, color = "red")
   scale_fill_manual(values = c("blue", "red"))
 ```
 
