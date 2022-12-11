@@ -6,7 +6,7 @@
 
 https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe
 
-Our analysis primarily revolves around the This dataset contains 208,000 different rat sightings in the City of New York between 2010 to the present day, reported by citizens to the City of New York and accessed from NYC Open Data. 38 different variables are recorded for each sighting; notably, geographic data such as latitude, longitude, and borough data, and the date of opening and closing of the complaint. 
+Our analysis primarily revolves around this dataset, with several supplementary datasets appended to this one for further in-depth analysis. This dataset contains 208,000 different rat sightings in the City of New York between 2010 to the present day, reported by citizens to the City of New York and accessed from NYC Open Data. 38 different variables are recorded for each sighting; notably, geographic data such as latitude, longitude, and borough data, and the date of opening and closing of the complaint. 
 
 ## Research Questions
 
