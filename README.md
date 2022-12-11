@@ -1,4 +1,4 @@
-# Rat Population Data Analysis - New York City
+# **Rat Population Data Analysis** - New York City
 
 ## DESCRIPTIONS OF DATASETS
 
