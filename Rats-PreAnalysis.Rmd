@@ -462,6 +462,8 @@ rats_per_day = rats %>%
   tally()
 
 rats_per_day$Season = time2season(rats_per_day$Date, out.fmt = "seasons")
+rats_per_day$Season = ifelse(rats_per_day$Season == "autumm", "autumn", rats_per_day$Season)
+
 ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
   geom_line(alpha=0.3) + labs(
     title="Number of Rats Recorded on Each Day",
@@ -480,6 +482,7 @@ covid_rats = inner_join(x = dailyCovidtest, y = rats_per_day, by = "Date")
 ggplot(data = covid_rats, aes(x = n, y = CASE_COUNT)) +
 geom_point()
 ```
+
 ```{r}
 #this is to remove outliers
 Q_covid <- quantile(covid_rats$CASE_COUNT, probs=c(.25, .75), na.rm = FALSE)

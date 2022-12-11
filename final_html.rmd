@@ -1,1 +1,431 @@
-poopy
+---
+title:  36-315 Final Project Data Pre-analysis 
+author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
+date:  November 18, 2022 
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  pdf_document:
+    toc: yes
+urlcolor: blue
+---
+
+# Rat Population Data Analysis - New York City
+
+## Descriptions of Datasets
+
+### Rat dataset
+*https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe*
+
+Our analysis primarily revolves around this dataset, with several supplementary datasets appended to this one for further in-depth analysis. This dataset contains 208,000 different rat sightings in the City of New York between 2010 to the present day, reported by citizens to the City of New York and accessed from NYC Open Data. 38 different variables are recorded for each sighting; notably, geographic data such as latitude, longitude, and borough data, and the date of opening and closing of the complaint.
+
+### Supplementary Datasets
+#### Subway Dataset
+*https://data.cityofnewyork.us/Transportation/Subway-Entrances/drex-xx56*
+
+This dataset, also sourced from NYC Open Data, contains the names, line numbers, and geographic coordinates of 1928 subways in New York City to date.
+
+#### Tax Return Dataset
+*https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-zip-code-data-soi*
+
+This is an 2019 IRS-sourced dataset which contains tax return information for each of the 178 zip codes in NYC; namely, the number of returns and total amounts requested by eligible citizens of each of the zip codes for their individual tax returns.
+
+#### Restaurant Inspection Dataset
+*https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j*
+
+This is an NYC Open Data dataset, most recently updated on December 10, 2022, containing 231,000 data, each corresponding to a health violation citation given to a restaurant in NYC by the City of New York's Health Department. We are given 27 different variables that most importantly provide the location and zip code of each restaurant which was issued a citation.
+
+#### COVID-19 Case Count Dataset
+*https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3*
+
+This NYC Open Data dataset, updated daily, contains 1,012 rows, each corresponding to a date between Februrary 29th, 2020 and the current day. This set also contains 27 fields which provide information about the number of COVID-19 cases, hospitalizations, and deaths.
+
+## Research Questions
+Going into this project, our group had several questions we wanted to answer regarding the distribution of rats in the city. Namely:
+
+1. How do rat sightings differ geographically and by borough?
+2. How has the number of rats reported changed over time?
+3. How does well do wealth and geographic data combined correlate with rat sightings?
+4. How do rat sightings correlate with candidate features such as subways and restaurants?
+
+In all, we hope to make underlying observations that extend beyond the mere topic of rats, using rat sightings as a proxy for deeper conclusions about socioeconomic and geographic patterns in the City of New York.
+
+## Graphs Made
+
+```{r, include = FALSE} 
+# library imports
+library(tigris)
+library(dplyr)
+library(leaflet)
+library(tidyverse)
+library(sp)
+library(ggmap)
+library(maptools)
+library(broom)
+library(httr)
+library(rgdal)
+library(gridExtra)
+library(stringr)
+library(ggseas)
+library(geosphere)
+library(stringr)
+library(hydroTSM)
+library(vcd)
+library(magrittr)
+library(knitr)
+library(gpclib)
+library(geojsonio)
+library(plotly)
+library(maps)
+library(reshape2)
+library(shiny)
+if (!require(gpclib)) install.packages("gpclib", type="source")
+gpclibPermit()
+```
+
+```{r, include=FALSE}
+# Loading in Data
+rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
+# # https://data.cityofnewyork.us/widgets/g642-4e55?mobile_redirect=true
+health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv')
+# # https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
+drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
+# # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+
+mayors <- read.csv(file = 'Raw/mayors.csv')
+
+events <- read.csv(file = 'Raw/nycevents.csv')
+
+pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
+
+dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
+
+subway_entrances <- read.csv(file = 'Raw/SubwayEntrances.csv')
+subway_entrances <- subway_entrances %>% add_column(longitude = NA)
+subway_entrances <- subway_entrances %>% add_column(latitude = NA)
+lats = 1:nrow(subway_entrances)
+longs = 1:nrow(subway_entrances)
+for (i in (1:nrow(subway_entrances))) {
+  longs[i] = as.numeric(sub(".", "", scan(text = subway_entrances$the_geom[i], what = "")[2]))
+  lats [i] = as.numeric(str_sub(scan(text = subway_entrances$the_geom[i], what = "")[3],1,-2))
+}
+subway_entrances$longitude = longs
+subway_entrances$latitude = lats
+
+
+# #NYC map lines
+r <- GET('http://data.beta.nyc//dataset/0ff93d2d-90ba-457c-9f7e-39e47bf2ac5f/resource/35dd04fb-81b3-479b-a074-a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson')
+nyc_neighborhoods <- readOGR(content(r,'text'), 'OGRGeoJSON', verbose = F)
+
+health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Codes, Community.Districts, Borough.Boundaries, City.Council.Districts, Police.Precincts))
+```
+
+```{r, include=FALSE}
+zipnames <- read.csv(file = 'Raw/zipcodenames.csv')
+tax <- read.csv(file = "Raw/nyctax-cleaned.csv")
+pop <- read.csv(file = "Raw/nyc2022population.csv")
+rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv")
+bar <- read.csv(file = "Raw/nycbarlocations.csv")
+michelin <- read.csv(file = "Raw/nycmichelin.csv")
+
+
+# NEW FOR THIS FILE: removing NA's for zipcodes
+rats = subset(rats, !is.na(Incident.Zip), Incident.Zip != "")
+
+nyczips <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
+nyczips <- tidy(nyczips, region = "postalCode")
+
+# NUMBER OF RATS: n_rats
+ratsumzip = rats %>% group_by(Incident.Zip) %>% tally()
+nyczips = nyczips %>% left_join(., ratsumzip, by = c("id" = "Incident.Zip"))
+nyczips = subset(nyczips, !is.na(n))
+colnames(nyczips)[8] = "n_rats"
+```
+
+
+```{r}
+head(rats)
+head(nyczips)
+```
+
+
+```{r, include=FALSE}
+zipnames$ZipCode <- as.character(zipnames$ZipCode)
+zipnames = subset(zipnames, select = -c(X, X.1, X.2, X.3))
+nyczips = nyczips %>% left_join(., zipnames, by = c("id" = "ZipCode"))
+```
+
+```{r, include = FALSE}
+
+rest$SCORE = replace_na(rest$SCORE, 0)
+# rest = subset(rest, !is.na(SCORE))
+restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
+colnames(restsumzip) = c("ZIPCODE", "n_rest")
+
+# NUMBER OF RESTAURANTS: n_rest
+nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
+
+nyczips = subset(nyczips, !is.na(n_rest))
+
+# RATIOS: rest_to_rat rat_to_rest
+# note: we decided to only use rat_to_rest as the other one has too small vals
+nyczips$rest_to_rat = nyczips$n_rest / nyczips$n_rats
+nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
+
+# AVERAGE RESTAURANT SCORE: score_avg
+restscorezip = rest %>% group_by(ZIPCODE) %>% summarize(score_avg = mean(SCORE))
+nyczips = nyczips %>% left_join(., restscorezip, by = c("id" = "ZIPCODE"))
+
+# RATIOS: score_to_rat rat_to_score
+# note: we decided to only use rat_to_score as the other one has too small vals
+nyczips$score_to_rat = nyczips$score_avg / nyczips$n_rats
+nyczips$rat_to_score = nyczips$n_rats / nyczips$score_avg
+
+# POPULATION: population
+# RATS PER CAPITA: rat_per_cap
+pop = subset(pop, population != 0)
+pop = subset(pop, select = c("zip", "population"))
+pop$zip = as.character(pop$zip)
+nyczips = nyczips %>% left_join(., pop, by = c("id" = "zip"))
+nyczips$rat_per_cap = nyczips$n_rats / nyczips$population
+
+tax = subset(tax, Zip.Code != 0 & Zip.Code != 99999)
+tax$Zip.Code = as.character(tax$Zip.Code)
+
+# this makes a tax rating (weighted average) score from 1 to 6, representing
+# the dist. of wealth among the brackets
+# NOTE FROM LIZ: this may be a really rarded way to get this info, open to other
+# smarter ideas for representing tax data with one number 
+tax$tax_rating = (tax$X.1.under..25.000 + 
+                    2 * tax$X.25.000.under..50.000 + 
+                    3 * tax$X.50.000.under..75.000 + 
+                    4 * tax$X.75.000.under..100.000 + 
+                    5 * tax$X.100.000.under..200.000 + 
+                    6 * tax$X.200.000.or.more) / tax$Total
+
+tax = subset(tax, select = c("Zip.Code", "tax_rating"))
+nyczips = nyczips %>% left_join(., tax, by = c("id" = "Zip.Code"))
+
+nyczips$rat_to_tax = nyczips$n_rats / nyczips$tax_rating
+
+```
+
+```{r}
+#this is to graph population by zip code
+popzip <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
+popzip <- tidy(popzip, region = "postalCode")
+popzip$id = strtoi(popzip$id)
+population = read.csv("Raw/nyc2022population.csv")
+colnames(population)[1] = "id"
+popzip = popzip %>% left_join(., population, by = "id")
+```
+
+
+### borough bar chart
+```{r}
+borough.counts <- as.data.frame(table(subset(rats, Borough != "Unspecified")$Borough))
+names(borough.counts) = c("Borough","Count")
+borough.counts <- rownames_to_column(borough.counts)
+borough.counts <- borough.counts %>%  filter(!row_number() %in% c(1))
+borough.counts
+ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
+  geom_col(aes(fill=Borough)) +
+  labs(title="Number of Rat Sightings by Borough")
+```
+
+### rat population map
+
+```{r}
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = n_rats)) +
+  theme_void() +
+  # scale_fill_gradient2(low = "darkblue", mid = "purple", high = "pink", midpoint=3000) + 
+  coord_map() + labs(
+    title = "Rat Sightings by Zip Code", 
+    fill = "# Rats"
+  )
+```
+
+
+### big events time series
+
+```{r}
+private = c(
+  "1-2 Family Dwelling",
+  "1-2 Family Mixed Use Building", 
+  "1-2 FamilyDwelling", 
+  "1-3 Family Dwelling", 
+  "1-3 Family Mixed Use Building", 
+  "3+ Family Apartment Building", 
+  "3+ Family Apt", 
+  "3+ Family Apt.", 
+  "3+ Family Apt. Building", 
+  "3+ Family Mixed Use Building",
+  "3+Family Apt.", 
+  "Apartment",
+  "Private House",
+  "Residence",
+  "Residential Building",
+  "Residential Property",
+  "Single Room Occupancy (SRO)"
+)
+
+commercial = c(
+  "Cafeteria - Public School",
+  "Catering Service", 
+  "Commercial Building", 
+  "Commercial Property", 
+  "Construction Site", 
+  "Day Care/Nursery", 
+  "Government Building", 
+  "Grocery Store",
+  "Hospital",
+  "Office Building", 
+  "Restaurant", 
+  "Restaurant/Bar/Deli/Bakery", 
+  "Retail Store", 
+  "School", 
+  "School/Pre-School",
+  "Store",
+  "Street Fair Vendor", 
+  "Summer Camp"
+)
+
+public = c(
+ "Abandoned Building", 
+ "Beach", 
+ "Building (Non-Residential)", 
+ "Catch Basin/Sewer",
+ "Ground",
+ "Parking Lot/Garage",
+ "Public Garden", 
+ "Public Stairs",
+ "Street Area", 
+ "Vacant Building", 
+ "Vacant Lot", 
+ "Vacant Lot/Property"
+)
+
+other = c(
+  "",
+  "N/A",
+  "Other",
+  "Other (Explain Below)"
+)
+
+rats$Location.Type[rats$Location.Type %in% private] <- "Private"
+rats$Location.Type[rats$Location.Type %in% public] <- "Public"
+rats$Location.Type[rats$Location.Type %in% commercial] <- "Commercial"
+rats$Location.Type[rats$Location.Type %in% other] <- "Other"
+rats$Location.Type <- factor(rats$Location.Type)
+rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
+
+rats_per_day = rats %>% 
+  group_by(Date, Location.Type) %>%
+  tally() 
+
+names(rats_per_day) = c("date", "locationtype", "n_rats")
+
+# ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
+#   geom_line(alpha=0.3) + labs(
+#     title="Number of Rats Recorded on Each Day", 
+#     subtitle="colored by the type of location",
+#     x="Date", 
+#     y="Number of Rats Recorded"
+#   ) + 
+#   scale_color_manual("Location Type", 
+#                      values = c("Other" = "yellow", 
+#                                 "Commercial" = "blue", 
+#                                 "Private" = "red", 
+#                                 "Public" = "green")) 
+
+mayors$Date.Start <- as.Date(mayors$Date.Start)
+mayors$Date.End <- as.Date(mayors$Date.End)
+events$Date <- as.Date(events$Date)
+
+ggplot(rats_per_day) +
+  geom_line(aes(date, n_rats, color=locationtype), alpha=0.3) + labs(
+    title="Number of Rats Recorded on Each Day (with Mayors)", 
+    subtitle="colored by the type of location",
+    x="Date", 
+    y="Number of Rats Recorded"
+  ) + 
+  scale_color_manual("Location Type", 
+                     values = c("Other" = "yellow", 
+                                "Commercial" = "blue", 
+                                "Private" = "orange", 
+                                "Public" = "green")) +
+  geom_rect( 
+    data = mayors,
+    aes(xmin = Date.Start, xmax = Date.End, fill = Party),
+    ymin = -Inf, ymax = Inf, alpha = 0.1
+  ) +
+  geom_vline(
+    aes(xintercept = as.numeric(Date.Start)),
+    data = mayors,
+    colour = "grey50", alpha = 0.5
+  ) +
+  geom_text(
+    aes(x = Date.Start+60, y = 110, label = Name),
+    data = mayors,
+    size = 3, vjust = 0, hjust = 0, nudge_x = 50, angle = 90) +
+  geom_segment(data = events, aes(x = Date, y = 40, xend = Date, yend = 55), color = "red") +
+  geom_text(data = events, aes(x = Date-50, y = 95, label = Event.Name), angle=90, color = "red")
+  scale_fill_manual(values = c("blue", "red"))
+```
+
+
+### seasons time series
+
+```{r}
+library(ggplot2)
+rats_per_day = rats %>%
+  group_by(Date) %>%
+  tally()
+
+rats_per_day$Season = time2season(rats_per_day$Date, out.fmt = "seasons")
+rats_per_day$Season = ifelse(rats_per_day$Season == "autumm", "autumn", rats_per_day$Season)
+
+ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
+  geom_line(alpha=0.3) + labs(
+    title="Number of Rats Recorded on Each Day",
+    subtitle="colored by the season",
+    x="Date",
+    y="Number of Rats Recorded"
+  ) +
+stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) +
+ggtitle("Width = 30")
+```
+
+The above graph plots the moving average for the number of rats seen each month in the red line in order to track the trends, as well as the actual observed number of rats per day. Furthermore, we colored the observed rats by the season in which it was observed, and found a harmonic pattern - there would always be a lot of rats observed in the summer, and not many rats observed in the winter (except for one fateful day in 2017!).  This could reflect a few things - rats don't like the cold and tend to stay inside, so they are less likely to be seen. However, humans don't like cold either, so they are less likely to go outside and observe rats in New York. Overall, it is interesting to note the changes in rat observations each season.
+
+### tax rating map
+
+```{r}
+ggplot() +
+  geom_polygon(data = nyczips, aes(x = long, y = lat, group = group, fill = rat_to_tax)) +
+  theme_void() +
+  scale_fill_gradient2(low = "#395184",
+                       mid = "#A964B8", 
+                       high = "#FFA9A9", midpoint = 1500) + 
+  coord_map() + labs(
+    title = "Rat to Tax Rating Ratio by Zip Code", 
+    fill = "Number of Rats / Tax Rating (from 1 to 6)"
+  )
+```
+
+### mosaic plot
+
+```{r}
+par(mar = c(5,4,1,10))
+
+mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
+```
+
+### restaurant map
+
+### subway map
+
+## Conclusions and Future Work
