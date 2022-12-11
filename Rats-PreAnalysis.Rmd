@@ -36,6 +36,7 @@ library(geosphere)
 library(stringr)
 library(hydroTSM)
 library(vcd)
+library(tidyr)
 # distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
@@ -464,9 +465,12 @@ no_outliers = lm(CASE_COUNT~n, data = covid_rats.iqr)
 summary(raw)
 summary(no_outliers)
 ```
-
+```{r}
+population = read.csv("Raw/nyc2022population.csv")
 ```
 
+BUFFER TEXT SO IT STOPS COMPLAINING
+```
 # DO NOT RUN THIS CHUNK! saving this here just to show how the rats with districts are tagged
 
 findDist <- function(lon, lat) {

@@ -38,7 +38,8 @@ library(plotly)
 library(maps)
 library(reshape2)
 library(shiny)
-
+if (!require(gpclib)) install.packages("gpclib", type="source")
+gpclibPermit()
 ```
 
 ```{r, include=FALSE}
@@ -87,12 +88,15 @@ rest <- read.csv(file = "Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.c
 rest$SCORE = replace_na(rest$SCORE, 0)
 # rest = subset(rest, !is.na(SCORE))
 restsumzip = rest %>% group_by(ZIPCODE) %>% tally()
+colnames(restsumzip) = c("ZIPCODE", "n_rest")
 
+# NUMBER OF RESTAURANTS: n_rest
 nyczips = nyczips %>% left_join(., restsumzip, by = c("id" = "ZIPCODE"))
-colnames(nyczips)[11] = "n_rest"
 
 nyczips = subset(nyczips, !is.na(n_rest))
 
+# RATIOS: rest_to_rat rat_to_rest
+# note: we decided to only use rat_to_rest as the other one has too small vals
 nyczips$rest_to_rat = nyczips$n_rest / nyczips$n_rats
 nyczips$rat_to_rest = nyczips$n_rats / nyczips$n_rest
 
@@ -102,6 +106,15 @@ nyczips = nyczips %>% left_join(., restscorezip, by = c("id" = "ZIPCODE"))
 nyczips$score_to_rat = nyczips$score_avg / nyczips$n_rats
 nyczips$rat_to_score = nyczips$n_rats / nyczips$score_avg
 
+```
+```{r}
+#this is to graph population by zip code
+popzip <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
+popzip <- tidy(popzip, region = "postalCode")
+popzip$id = strtoi(popzip$id)
+population = read.csv("Raw/nyc2022population.csv")
+colnames(population)[1] = "id"
+popzip = popzip %>% left_join(., population, by = "id")
 ```
 
 ```{r}
@@ -130,6 +143,14 @@ ggplot() +
   coord_map() + labs(
     title = "Restaurant Scores by Zip Code", 
     fill = "Avg Score"
+  )
+
+ggplot() + 
+  geom_polygon(data = popzip, aes(x = long, y = lat, group = group, fill = population)) + 
+  theme_void() + 
+  coord_map() + labs(
+    title = "Population by Zip Code",
+    fill = "Population"
   )
 
 ```
