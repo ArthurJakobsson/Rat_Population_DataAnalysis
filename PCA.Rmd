@@ -1,10 +1,37 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title:  36-315 Final Project PCA  
+author:  Liz Chu
+date:  December 11, 2022
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  pdf_document:
+    toc: yes
+urlcolor: blue
 ---
-
 
 
 ```{r}
 zipinfo <- read.csv(file = "zipout.csv")
+zipinfo = na.omit(zipinfo)
+zipinfo.subset = subset(zipinfo, select = c(n_rats, n_rest, score_avg, population, tax_rating))
+zipinfo.subset = apply(zipinfo.subset, MARGIN = 2, FUN = function(x) x - mean(x))
+zipinfo.subset = apply(zipinfo.subset, MARGIN = 2, FUN = function(x) x/sd(x))
+zipinfo.pca = prcomp(zipinfo.subset)
+summary(zipinfo.pca)
+
+X = as.matrix(zipinfo.subset)
+prin_comps = as.data.frame(X %*% zipinfo.pca$rotation)
+prin_comps$borough = zipinfo$borough
+
+
+library(devtools)
+library(ggbiplot)
+ggbiplot(zipinfo.pca, alpha = 0.5, groups = zipinfo$borough, varname.adjust=-0.5) + labs(
+  title = "PCA of Rats, Colored by Borough", 
+  subtitle = "n_rats, n_rest, score_avg, population, tax_rating"
+)
+
 ```
