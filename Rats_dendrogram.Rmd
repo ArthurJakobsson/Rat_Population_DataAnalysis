@@ -1,0 +1,138 @@
+
+#But What Are The Rats' Social Groups?
+
+After spending the afternoon studying alone (by choice I promise), I had the question - do rats always stay together? How is the rat social community doing after all these years, given that they probably don't have social media to stalk each other? Faced with the question, I decided to track down the clusters of rats in New York.
+
+The first thing I realized was that there were (1) a lot of rats and (2) a lot of years, so I decided to track year-by-year (even though the brown rats of New York live for about two years), and only check three spread out years to see what the changes would be like. I would also only check the upper-side of Manhattan, which happens to have the most rat complaints.
+```{r}
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(sp)
+library(geosphere)
+library(dismo)
+library(rgeos)
+
+allrats = read.csv("Raw/Rat_Sightings.csv")
+allrats = subset(allrats, !is.na(Latitude) & !is.na(Longitude) & Borough == "MANHATTAN")
+allrats = subset(allrats, Latitude > 40.76)
+allrats$Date = word(allrats$Created.Date, 1)
+allrats$Date = as.Date(allrats$Date, format = "%m/%d/%Y")
+```
+```{r}
+rats10.11 = subset(allrats, Date > "2010-01-01" & Date < "2011-01-01")
+rats11.12 = subset(allrats, Date > "2011-01-01" & Date < "2012-01-01")
+rats12.13 = subset(allrats, Date > "2012-01-01" & Date < "2013-01-01")
+rats13.14 = subset(allrats, Date > "2013-01-01" & Date < "2014-01-01")
+rats14.15 = subset(allrats, Date > "2014-01-01" & Date < "2015-01-01")
+rats15.16 = subset(allrats, Date > "2015-01-01" & Date < "2016-01-01")
+rats21.22 = subset(allrats, Date > "2021-01-01" & Date < "2022-01-01")
+#rats22.pres = subset(allrats, Date > "2022-01-01")
+```
+
+#Clustering
+Since we are dealing with latitude and longitude data, I had to all this fancy stuff in order to compute the distance matrix. Furthermore, I set 274.32 as the distance to start breaking up clusters since this is the approximate size, in meters, of a New York City block. In the code below, I essentially do the same thing with three years - 2010, 2015, and 2021, in an attempt to cluster the rats that live in our subsetted area.
+```{r}
+#clustering for 2010-2011
+df10.11 <- SpatialPointsDataFrame(
+      matrix(c(rats10.11$Latitude,rats10.11$Longitude), ncol=2), data.frame(ID=seq(1:length(rats10.11$Latitude))),
+      proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
+mdist <- distm(df10.11)
+hc <- hclust(as.dist(mdist), method="complete")
+```
+```{r}
+d = 274.32
+df10.11$clust <- cutree(hc, h=d)
+```
+
+```{r}
+#clustering for 2015-2016
+df15.16 <- SpatialPointsDataFrame(
+      matrix(c(rats15.16$Latitude,rats15.16$Longitude), ncol=2), data.frame(ID=seq(1:length(rats15.16$Latitude))),
+      proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
+mdist <- distm(df15.16)
+hc <- hclust(as.dist(mdist), method="complete")
+d = 274.32
+df15.16$clust <- cutree(hc, h=d)
+```
+
+```{r}
+#clustering for 2021-2022
+df21.22 <- SpatialPointsDataFrame(
+      matrix(c(rats21.22$Latitude,rats21.22$Longitude), ncol=2), data.frame(ID=seq(1:length(rats21.22$Latitude))),
+      proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
+mdist <- distm(df21.22)
+hc <- hclust(as.dist(mdist), method="complete")
+d = 274.32
+df21.22$clust <- cutree(hc, h=d)
+```
+
+#Plotting
+Plotting would also require a lot of fancy stuff, since there were a LOT of clusters. I also attempted to add circles around each point in order to indicate the cluster.
+```{r}
+#plotting for 2010-2011
+# expand the extent of plotting frame
+df10.11@bbox[] <- as.matrix(extend(extent(df10.11),0.001))
+
+# get the centroid coords for each cluster
+cent <- matrix(ncol=2, nrow=max(df10.11$clust))
+for (i in 1:max(df10.11$clust))
+    # gCentroid from the rgeos package
+    cent[i,] <- gCentroid(subset(df10.11, clust == i))@coords
+
+# compute circles around he centroid coords using a 40m radius
+# from the dismo package
+ci <- circles(cent, d=d, lonlat=T)
+
+# plot
+plot(ci@polygons, axes=T)
+plot(df10.11, col=rainbow(144)[factor(df10.11$clust)], add=T)
+```
+
+```{r}
+#plotting for 2015-2016
+# expand the extent of plotting frame
+df15.16@bbox[] <- as.matrix(extend(extent(df15.16),0.001))
+
+# get the centroid coords for each cluster
+cent <- matrix(ncol=2, nrow=max(df15.16$clust))
+for (i in 1:max(df15.16$clust))
+    # gCentroid from the rgeos package
+    cent[i,] <- gCentroid(subset(df15.16, clust == i))@coords
+
+# compute circles around he centroid coords using a 40m radius
+# from the dismo package
+ci <- circles(cent, d=d, lonlat=T)
+
+# plot
+plot(ci@polygons, axes=T)
+plot(df15.16, col=rainbow(164)[factor(df15.16$clust)], add=T)
+```
+```{r}
+#plotting for 2021-2022
+# expand the extent of plotting frame
+df21.22@bbox[] <- as.matrix(extend(extent(df21.22),0.001))
+
+# get the centroid coords for each cluster
+cent <- matrix(ncol=2, nrow=max(df21.22$clust))
+for (i in 1:max(df21.22$clust))
+    # gCentroid from the rgeos package
+    cent[i,] <- gCentroid(subset(df21.22, clust == i))@coords
+
+# compute circles around he centroid coords using a 40m radius
+# from the dismo package
+ci <- circles(cent, d=d, lonlat=T)
+
+# plot
+plot(ci@polygons, axes=T)
+plot(df21.22, col=rainbow(164)[factor(df21.22$clust)], add=T)
+```
+
+#TABULAR DATA
+
+This is the number of clusters per year.
+```{r}
+print(length(unique(df10.11$clust)))
+print(length(unique(df15.16$clust)))
+print(length(unique(df21.22$clust)))
+```

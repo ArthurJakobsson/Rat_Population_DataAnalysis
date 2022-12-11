@@ -42,11 +42,11 @@ This NYC Open Data dataset, updated daily, contains 1,012 rows, each correspondi
 
 Going into this project, our group had several questions we wanted to answer regarding the distribution of rats in the city. Namely:
 
-* How has the number of rats reported changed over time?
-* How have policies intended to reduce the number of rats in NYC affected rat sightings?
 * How do rat sightings differ geographically and by borough?
-* How do rat sightings correlate with candidate features such as subways and restaurants?
+* How has the number of rats reported changed over time?
 * How does well do wealth and geographic data combined correlate with rat sightings?
+* How do rat sightings correlate with candidate features such as subways and restaurants?
+
 
 In all, we hope to make underlying observations that extend beyond the mere topic of rats, using rat sightings as a proxy for deeper conclusions about socioeconomic and geographic patterns in the City of New York.
 
