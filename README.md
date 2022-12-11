@@ -1,6 +1,6 @@
 # Rat Population Data Analysis - New York City
 
-</hr>
+<hr>
 
 ## Descriptions of Datasets
 
