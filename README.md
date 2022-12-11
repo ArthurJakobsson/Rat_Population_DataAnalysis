@@ -20,9 +20,15 @@ This dataset, also sourced from NYC Open Data, contains the names, line numbers,
 
 #### Tax Return Dataset
 
+https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-zip-code-data-soi
+
 This is an 2019 IRS-sourced dataset which contains tax return information for each of the 178 zip codes in NYC; namely, the number of returns and total amounts requested by eligible citizens of each of the zip codes for their individual tax returns.
 
-#### 
+#### Restaurant Inspection Dataset
+
+https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j
+
+This is a dataset, most recently updated on December 10, 2022, containing 231,000 data, each corresponding to a health violation citation given to a restaurant in NYC by the City of New York's Health Department. We are given 27 different variables that most importantly provide the location and zip code of each restaurant which was issued a citation.
 
 <hr>
 
