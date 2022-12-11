@@ -12,3 +12,8 @@ This dataset contains 208,000 different rat sightings in the City of New York be
 
 Going into this project, our group had several questions we wanted to answer regarding the distribution of rats in the city. Namely:
 
+* How has the number of rats reported changed over time?
+* How have policies intended to reduce the number of rats in NYC affected rat sightings?
+* How do rat sightings differ geographically?
+* How discriminative can the borough of a rat sighting be in determining the characteristics of the sighting?
+
