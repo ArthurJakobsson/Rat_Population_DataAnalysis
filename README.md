@@ -14,6 +14,7 @@ Going into this project, our group had several questions we wanted to answer reg
 
 * How has the number of rats reported changed over time?
 * How have policies intended to reduce the number of rats in NYC affected rat sightings?
-* How do rat sightings differ geographically?
-* How discriminative can the borough of a rat sighting be in determining the characteristics of the sighting?
+* How do rat sightings differ geographically and by borough?
+* How do rat sightings correlate with candidate features such as subways and restaurants?
+* How does well do wealth and geographic data combined correlate with rat sightings?
 
