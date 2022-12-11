@@ -112,7 +112,7 @@ health_inspection = subset(health_inspection, select = -c(Location.Point, Zip.Co
 
 #nice map (manhattan, brooklyn, queens, a bit of bronx)
 left =-74.03 
-bottom = 40.68 
+bottom = 40.64
 right = -73.87
 top = 40.85
 nyc_coords <- c(left, bottom, right, top)
@@ -196,6 +196,22 @@ ratHealthScore_mapM <- ggmap(nyc_mapM) +
   scale_color_distiller(palette = "PiYG") + 
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill="white", alpha=0.3)
 
+```
+
+```{r}
+#HEAT MAP VERSION
+
+#SUBWAY STATIONS
+ggmap(nyc_map) + 
+  geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
+  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 0.6, alpha=0.2) + 
+  scale_color_distiller(palette = "PiYG")
+
+#Restaurants (subset, score worse than 50)
+ggmap(nyc_map) +
+  geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
+  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.3, alpha=0.1) + 
+  scale_color_distiller(palette = "YlOrRd")
 ```
 
 ```{r}
