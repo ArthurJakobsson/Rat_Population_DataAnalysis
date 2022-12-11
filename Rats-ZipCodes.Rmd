@@ -3,12 +3,12 @@ title:  36-315 Final Project Zip Code
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
+  pdf_document:
+    toc: yes
 urlcolor: blue
 ---
 
@@ -259,6 +259,16 @@ ggplot() +
 ```{r}
 
 # ggplotly(p)
+
+zipout = subset(nyczips, select = -c(long, lat, order, hole, 
+                                     piece, group))
+colnames(zipout)[1] = "zipcode"
+colnames(zipout)[3] = "borough"
+colnames(zipout)[4] = "neighborhood"
+
+zipout = zipout %>% distinct()
+
+write.csv(zipout, file = "zipout.csv")
 
 ```
 
