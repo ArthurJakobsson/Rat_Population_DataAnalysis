@@ -1,0 +1,10 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+zipinfo <- read.csv(file = "zipout.csv")
+```
