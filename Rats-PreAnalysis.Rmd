@@ -290,6 +290,8 @@ fill = "Location Type"
 )
 grid.arrange(family, non_family, nrow = 2)
 ```
+
+
 ```{r}
 par(mar = c(5,4,1,10))
 
@@ -449,7 +451,7 @@ rats$Time = word(rats$Created.Date, start = 2, end = 3)
 rats.time = subset(rats, Time != "12:00:00 AM")
 rats.time$Hour = as.numeric(substr(strptime(rats.time$Time, "%I:%M:%S %p"), 11,13))
 ggplot(data=rats.time, aes(x=Hour)) +
-  geom_bar(fill="cornflowerblue") +
+  geom_bar(aes(fill=Location.Type)) +
   labs(x="Hour of the day", y="Number of rat reportings", title="Number of rat sightings by hour of day")
 ```
 
@@ -542,5 +544,36 @@ ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
   geom_col(aes(fill=Borough))
 ```
 
+```{r}
+# reads in tax return dataset
+tax_returns <- read.csv(file="Raw/nyctax-cleaned.csv")
+tax_returns <- subset(tax_returns, Zip.Code != 0)
+tax_returns <- subset(tax_returns, Zip.Code != 99999)
+```
 
+```{r}
+incidents <- rats$Incident.Address
+incidents <- removeNumbers(incidents)
+head(incidents)
+```
+
+
+```{r}
+library(tm)
+#first, let's work with the titles
+#redefine as Corpus
+boroughs = Corpus(VectorSource(rats$Incident.Address))
+#change to lowercase
+boroughs <- tm_map(boroughs, content_transformer(tolower))
+# Remove punctuations
+boroughs <- tm_map(boroughs, removePunctuation)
+# Eliminate extra white spaces
+# boroughs <- tm_map(boroughs, stripWhitespace)
+dtm.boroughs <- DocumentTermMatrix(boroughs, control = list(stopwords = TRUE, stemming = TRUE))
+boroughs.words <- colnames(dtm.boroughs)
+dtm.boroughs.mat = as.matrix(dtm.boroughs)
+boroughs.freqs = colSums(dtm.boroughs.mat)
+library(wordcloud)
+wordcloud(words=boroughs.words, freq=boroughs.freqs, random.order=FALSE, max.words=100, colors=c("red", "blue", "black"))
+```
 
