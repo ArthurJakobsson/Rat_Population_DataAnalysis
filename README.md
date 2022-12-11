@@ -14,6 +14,8 @@ Our analysis primarily revolves around this dataset, with several supplementary 
 
 #### Subway Dataset
 
+<hr>
+
 ## Research Questions
 
 Going into this project, our group had several questions we wanted to answer regarding the distribution of rats in the city. Namely:
