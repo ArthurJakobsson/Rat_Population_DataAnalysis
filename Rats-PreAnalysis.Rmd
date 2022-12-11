@@ -36,7 +36,10 @@ library(geosphere)
 library(stringr)
 library(hydroTSM)
 library(vcd)
-library(tidyr)
+
+
+library(magrittr)
+library(knitr)
 # distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
@@ -51,6 +54,8 @@ health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspect
 # # https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
 drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
 # # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+
+mayors <- read.csv(file = 'Raw/mayors.csv')
 
 # knicks <- read.csv(file = 'Raw/knicks.csv')
 # # @ALEX
@@ -301,11 +306,6 @@ mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic P
 #                                 Bridge.Highway.Direction, Road.Ramp, 
 #                                 Bridge.Highway.Segment, Facility.Type, 
 #                                 Park.Facility.Name))
-
-
-library(dplyr)
-library(magrittr)
-library(knitr)
 private = c(
   "1-2 Family Dwelling",
   "1-2 Family Mixed Use Building", 
@@ -382,10 +382,25 @@ rats_per_day = rats %>%
 
 names(rats_per_day) = c("date", "locationtype", "n_rats")
 
-library(tidyverse)
-ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
-  geom_line(alpha=0.3) + labs(
-    title="Number of Rats Recorded on Each Day", 
+# ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
+#   geom_line(alpha=0.3) + labs(
+#     title="Number of Rats Recorded on Each Day", 
+#     subtitle="colored by the type of location",
+#     x="Date", 
+#     y="Number of Rats Recorded"
+#   ) + 
+#   scale_color_manual("Location Type", 
+#                      values = c("Other" = "yellow", 
+#                                 "Commercial" = "blue", 
+#                                 "Private" = "red", 
+#                                 "Public" = "green")) 
+
+mayors$Date.Start <- as.Date(mayors$Date.Start)
+mayors$Date.End <- as.Date(mayors$Date.End)
+
+ggplot(rats_per_day) +
+  geom_line(aes(date, n_rats, color=locationtype), alpha=0.3) + labs(
+    title="Number of Rats Recorded on Each Day (with Mayors)", 
     subtitle="colored by the type of location",
     x="Date", 
     y="Number of Rats Recorded"
@@ -394,8 +409,22 @@ ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) +
                      values = c("Other" = "yellow", 
                                 "Commercial" = "blue", 
                                 "Private" = "red", 
-                                "Public" = "green")) 
-
+                                "Public" = "green")) +
+  geom_rect( 
+    data = mayors,
+    aes(xmin = Date.Start, xmax = Date.End, fill = Party),
+    ymin = -Inf, ymax = Inf, alpha = 0.1
+  ) +
+  geom_vline(
+    aes(xintercept = as.numeric(Date.Start)),
+    data = mayors,
+    colour = "grey50", alpha = 0.5
+  ) +
+  geom_text(
+    aes(x = Date.Start+60, y = 110, label = Name),
+    data = mayors,
+    size = 3, vjust = 0, hjust = 0, nudge_x = 50, angle = 90) +
+  scale_fill_manual(values = c("blue", "red"))
 ```
 
 dts <- strptime(time, "%I:%M:%S %p")
@@ -465,12 +494,9 @@ no_outliers = lm(CASE_COUNT~n, data = covid_rats.iqr)
 summary(raw)
 summary(no_outliers)
 ```
-```{r}
-population = read.csv("Raw/nyc2022population.csv")
+
 ```
 
-BUFFER TEXT SO IT STOPS COMPLAINING
-```
 # DO NOT RUN THIS CHUNK! saving this here just to show how the rats with districts are tagged
 
 findDist <- function(lon, lat) {
