@@ -144,13 +144,6 @@ nyczips = subset(nyczips, !is.na(n))
 colnames(nyczips)[8] = "n_rats"
 ```
 
-
-```{r}
-head(rats)
-head(nyczips)
-```
-
-
 ```{r, include=FALSE}
 zipnames$ZipCode <- as.character(zipnames$ZipCode)
 zipnames = subset(zipnames, select = -c(X, X.1, X.2, X.3))
@@ -424,8 +417,70 @@ par(mar = c(5,4,1,10))
 mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
 ```
 
+
 ### restaurant map
 
+```{r}
+# importing rats
+
+ratSubset <- subset(rats, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom)
+ratSubsetF <- subset(rats, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF)
+ratSubsetM <- subset(rats, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM)
+
+health_inspection[, c("SCORE")] <- sapply(health_inspection[, c("SCORE")], as.integer)
+health_inspection["SCORE"][is.na(health_inspection["SCORE"])] <- 0
+
+healthSubset <- subset(health_inspection, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom & SCORE>50)
+healthSubsetF <- subset(health_inspection, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF & SCORE>50)
+healthSubsetM <- subset(health_inspection, Longitude<rightM & Latitude<topM & Longitude > leftM & Latitude >bottomM & SCORE>50)
+
+rat_map <- ggmap(nyc_map) +
+  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
+
+rat_mapF <- ggmap(nyc_mapF) +
+  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
+
+rat_mapM <- ggmap(nyc_mapM) +
+  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
+
+# rat_map
+# rat_mapF
+# rat_mapM
+
+
+ratHealthScore_map <- ggmap(nyc_map) +
+  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
+  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
+  scale_color_distiller(palette = "PiYG")
+
+ratHealthScore_mapF <- ggmap(nyc_mapF) +
+  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
+  geom_point(data=healthSubsetF, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
+  scale_color_distiller(palette = "PiYG")
+
+ratHealthScore_mapM <- ggmap(nyc_mapM) +
+  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "chocolate3") +
+  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) + 
+  scale_color_distiller(palette = "PiYG") + 
+  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill="white", alpha=0.3)
+
+```
+
+```{r}
+#Restaurants (subset, score worse than 50)
+ggmap(nyc_map) +
+  geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
+  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.3, alpha=0.1) + 
+  scale_color_distiller(palette = "YlOrRd")
+```
 ### subway map
+
+```{r}
+#SUBWAY STATIONS
+ggmap(nyc_map) + 
+  geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
+  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 0.6, alpha=0.2) + 
+  scale_color_distiller(palette = "PiYG")
+```
 
 ## Conclusions and Future Work
