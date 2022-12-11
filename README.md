@@ -1,8 +1,8 @@
-# Rat_Population_DataAnalysis
+# Rat Population Data Analysis - New York City
 
-# DESCRIPTIONS OF DATASETS
+## DESCRIPTIONS OF DATASETS
 
-Rat dataset
+### Rat dataset
 
 https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe
 
