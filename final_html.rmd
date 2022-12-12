@@ -22,6 +22,9 @@ urlcolor: blue
 Our analysis primarily revolves around this dataset, with several supplementary datasets appended to this one for further in-depth analysis. This dataset contains 208,000 different rat sightings in the City of New York between 2010 to the present day, reported by citizens to the City of New York and accessed from NYC Open Data. 38 different variables are recorded for each sighting; notably, geographic data such as latitude, longitude, and borough data, and the date of opening and closing of the complaint.
 
 ### Supplementary Datasets
+
+We join various auxiliary datasets (described below) to our rat sightings dataset in order to better examine how rat sightings correlate to other demographic and geographic factors.
+
 #### Subway Dataset
 *https://data.cityofnewyork.us/Transportation/Subway-Entrances/drex-xx56*
 
@@ -492,4 +495,4 @@ ggmap(nyc_map) +
 
 ## Conclusions and Future Work
 
-Through this analysis, we have learned a multitude of interesting things about the conditional distribution of rats in New York City given such variables as geography, temporal events, and physical landmarks.
+Through this analysis, we have learned a multitude of interesting things about the conditional distribution of rats in New York City given such variables as geography, temporal events, and physical landmarks. Clearly the distribution of rats in the city correlates highly with many of our tested variables, and displays significant geographic and temporal activity. It seems that the quanitity of rat sightings differ greatly between boroughs, zip codes within boroughs, and even specific types of locations within different boroughs. Futhermore, rat sightings display a significant trend and seasonal over time, all the while responding to major events that occur in the city. Future analysis of this topic would do well to analyze a) different datasets that could potentially be compared to rat sighting distributions such as racial or age-related data in order to assess how people of different social groups experience varying levels of rats in their homes, and/or b) dive deeper into the auxiliary variables which we had already selected; for example, correcting for geographic area in our borough and zip code data in order to calculate and visualize how the rats per square mile (and by extension, variables involving rat sighing counts such as rat sighting density to tax rating ratio) changes between geographic regions. In all, this project provided a thoughtful insight into life in New York City from the perspective of its most mainstay citizens - the rats.
