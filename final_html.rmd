@@ -3,12 +3,12 @@ title:  Man**rat**tan - A Look into NYC's Rats
 author:  Alex Cheng, Liz Chu, Arthur Jakobsson, Kevin Ren 
 date:  December 12, 2022
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: hide
+  pdf_document:
+    toc: yes
 urlcolor: blue
 ---
 
@@ -256,6 +256,8 @@ This map tells us some key information about New York City's rats —  we see t
 
 ### Big Events Time Series
 
+We hoped to garner a further understanding of what causes upticks in rat population, or at least rat spotting. We plotted a time series map of the progression of total rat population in our dataset from 2010, when the first rat was recorded, to present. We also added information which could be correlated potentially with changes in trend of the rat population or a sudden uptick in rats. This includes major events in New York that could be connected to sanitary conditions, number of people outside, or policy changes such as storms, protests, and changes in mayor. We also thought to explore the relative locations for which the rats were spotted to understand the locations in which the rats lived as well as to know if some events caused increases in some domains of the rats.
+
 ```{r}
 private = c(
   "1-2 Family Dwelling",
@@ -382,6 +384,7 @@ ggplot(rats_per_day) +
   scale_fill_manual(values = c("blue", "red"))
 ```
 
+We notice a clear increase over time of the rat population. The most evident trend can be correlated with the strong seasonal changes of the New York area which we dissect further in the next section. With regards to the relative location, we observe large number of rats spotted in private areas followed by public and then other, with the fewest rats being spotted in commercial areas. We infer that this is likely due to the fact that many rat spotting is likely connected to building complaints as well as calling of exterminators which is probably most common for private residences to do. Another large reason that this trend may be observed is that a large part of New York is residential, considerably more than any of the other sectors. Among significant events we observed very few major deviations in rat population after events. Several of the protests (Occupy Wall Street, People's Climate March and the Global Climate Strike) as well as the Brooklyn/Queens Tornado seem to be related to slight upticks in rat population, but without further analysis we cannot state whether this is statistically significant. The most noticeable, sudden increase in rat population follows the Women's March protest in 2017, but we again cannot draw any conclusions and must follow this up with statistical tests to draw any conclusions.
 
 ### Seasons Time Series
 
@@ -498,23 +501,36 @@ rat_mapM <- ggmap(nyc_mapM) +
   geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
 ```
 
+We decided to see if there were any evident relationships between geographic artifacts such as restaurants in New York with the density of the rat population. Our intuition was that an increases in restaurants would increase the number of food sources which would have an immediate impact on rat population. After initial results showing inconsequential results we decided to test whether restaurants that received a poor score on their health examination (arbitrarily 50+ scores, with 0 being a perfect score) had a relationship with rats. We speculated that that worse sanitary conditions of the restaurants may also share some relationship with rat population.
+
 ```{r}
 #Restaurants (subset, score worse than 50)
 ggmap(nyc_map) +
   geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
   geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.3, alpha=0.1) + 
-  scale_color_distiller(palette = "YlOrRd")
+  scale_color_distiller(palette = "YlOrRd", name = "Restaurant Score") +
+  ggtitle("Rat Density across Manhattan and Brooklyn", subtitle = "with restaurant health scores") +
+  guides(fill = guide_legend(title = "Rat Density"))
 ```
 
+We observe several intersting trends in this graph. We notice that the very dense area of Midtown which hosts most of the restaurants and most of the restaurants with bad health scores also contains very few rats. This in and of itself is worth further investigation. It is worth noting that Combs et. al. *https://www.theatlantic.com/science/archive/2017/11/rats-of-new-york/546959/* observed similar results in their genetic study of rats in New York, with Midtown serving as a natural genetic and physical boundary for the rat populations. Otherwise, the density of the rat populations as well as the restaurants seem to have little in common aside from some small areas. This is counter-intuitive, but supports the idea that rat population may be driven more greatly by other factors such as potentially human movement or human density. 
+
 ### Subway Heat Map
+
+We thought to observe the relationship between human movement and rat population density. We decided to see if we could notice a relationship between subway entrances, a location comically famously associated with rat spotting, and rat density. While subway entrances provide a loose map of where people move and where people live it is important to note that because the New York subway map is designed similarly to most United States rail and public transport systems.The lines take people from the suburbs and the other boroughs into Manhattan to support the idea of a work day commute with people living in the outskirts of the city and traveling into the city for work.
 
 ```{r, warning=FALSE}
 #SUBWAY STATIONS
 ggmap(nyc_map) + 
   geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
-  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 0.6, alpha=0.2) + 
-  scale_color_distiller(palette = "PiYG")
+  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 0.5, alpha=0.2) + 
+  scale_color_distiller(palette = "PiYG") +
+  ggtitle("Rat Density across Manhattan and Brooklyn", subtitle = "with Subway Entrances") +
+  guides(fill = guide_legend(title = "Rat Density"))
 ```
+
+We observe again that the subways are densely populated in Midtown where there is a noticeable absence of rats. However, we do notice that there are some clearer trends in rats populations following approximate lines of the subway. We surmise that this is because living near subway lines is considered desireable and therefore these areas are likely to be more densely populated and also have much heavier foot traffic and daily activity. The areas in which these trends are most noticeable are in the Upper West Side, Harlem, Bedford-Stuyvesant, Williamsburg and even in Queens. It is also interesting to note that, similarly to Midtown, the Financial District in the South of Manhattan seems to host few rat populations. Therefore, we could potentially suggest that the similar industrial designs and lifestyles of these two neighborhoods may have some impact on the rat populations and density in these areas.
+
 
 ## Conclusions and Future Work
 
