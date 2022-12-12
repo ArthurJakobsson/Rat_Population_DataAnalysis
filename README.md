@@ -12,6 +12,8 @@ Our analysis primarily revolves around this dataset, with several supplementary 
 
 ### Supplementary Datasets
 
+We join various auxiliary datasets (described below) to our rat sightings dataset in order to better examine how rat sightings correlate to other demographic and geographic factors.
+
 #### Subway Dataset
 
 https://data.cityofnewyork.us/Transportation/Subway-Entrances/drex-xx56
@@ -29,12 +31,6 @@ This is an 2019 IRS-sourced dataset which contains tax return information for ea
 https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j
 
 This is an NYC Open Data dataset, most recently updated on December 10, 2022, containing 231,000 data, each corresponding to a health violation citation given to a restaurant in NYC by the City of New York's Health Department. We are given 27 different variables that most importantly provide the location and zip code of each restaurant which was issued a citation.
-
-#### COVID-19 Case Count Dataset
-
-https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3
-
-This NYC Open Data dataset, updated daily, contains 1,012 rows, each corresponding to a date between Februrary 29th, 2020 and the current day. This set also contains 27 fields which provide information about the number of COVID-19 cases, hospitalizations, and deaths.
 
 <hr>
 
