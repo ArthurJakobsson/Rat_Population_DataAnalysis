@@ -1,14 +1,14 @@
 ---
-title:  36-315 Final Project Data Pre-analysis 
+title:  Manrattan - A Look into NYC Rats
 author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
 date:  November 18, 2022 
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: show
-  pdf_document:
-    toc: yes
 urlcolor: blue
 ---
 
@@ -52,7 +52,14 @@ In all, we hope to make underlying observations that extend beyond the mere topi
 
 ## Graphs Made
 
-```{r, include = FALSE} 
+``` {r, echo = FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(results='hide')
+```
+
+```{r} 
 # library imports
 library(tigris)
 library(dplyr)
@@ -223,7 +230,6 @@ borough.counts <- as.data.frame(table(subset(rats, Borough != "Unspecified")$Bor
 names(borough.counts) = c("Borough","Count")
 borough.counts <- rownames_to_column(borough.counts)
 borough.counts <- borough.counts %>%  filter(!row_number() %in% c(1))
-borough.counts
 ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
   geom_col(aes(fill=Borough)) +
   labs(title="Number of Rat Sightings by Borough")
@@ -376,7 +382,7 @@ ggplot(rats_per_day) +
 
 Building on this time series analysis, we now turn to a seasonal approach to modeling rat sightings over time, hoping to further address our research question of how temporal factors impact rat sighting counts.
 
-```{r}
+```{r, warning=FALSE}
 library(ggplot2)
 rats_per_day = rats %>%
   group_by(Date) %>%
@@ -435,7 +441,7 @@ This mosaic plot visualizes the conditional distribution of reporting sites of r
 
 ### restaurant map
 
-```{r}
+```{r, message=FALSE}
 # importing rats
 #nice map (manhattan, brooklyn, queens, a bit of bronx)
 left =-74.03 
@@ -490,9 +496,10 @@ ggmap(nyc_map) +
   geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.3, alpha=0.1) + 
   scale_color_distiller(palette = "YlOrRd")
 ```
+
 ### subway map
 
-```{r}
+```{r, warning=FALSE}
 #SUBWAY STATIONS
 ggmap(nyc_map) + 
   geom_density_2d_filled(data=ratSubset, aes(x = Longitude, y = Latitude, fill = after_stat(level)), alpha = 0.4) + 
