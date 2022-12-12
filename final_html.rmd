@@ -374,6 +374,8 @@ ggplot(rats_per_day) +
 
 ### seasons time series
 
+Building on this time series analysis, we now turn to a seasonal approach to modeling rat sightings over time, hoping to further address our research question of how temporal factors impact rat sighting counts.
+
 ```{r}
 library(ggplot2)
 rats_per_day = rats %>%
