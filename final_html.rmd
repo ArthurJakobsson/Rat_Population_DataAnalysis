@@ -40,11 +40,6 @@ This is an 2019 IRS-sourced dataset which contains tax return information for ea
 
 This is an NYC Open Data dataset, most recently updated on December 10, 2022, containing 231,000 data, each corresponding to a health violation citation given to a restaurant in NYC by the City of New York's Health Department. We are given 27 different variables that most importantly provide the location and zip code of each restaurant which was issued a citation.
 
-#### COVID-19 Case Count Dataset
-*https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3*
-
-This NYC Open Data dataset, updated daily, contains 1,012 rows, each corresponding to a date between Februrary 29th, 2020 and the current day. This set also contains 27 fields which provide information about the number of COVID-19 cases, hospitalizations, and deaths.
-
 ## Research Questions
 Going into this project, our group had several questions we wanted to answer regarding the distribution of rats in the city. Namely:
 
