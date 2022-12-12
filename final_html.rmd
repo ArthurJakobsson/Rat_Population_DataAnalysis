@@ -396,7 +396,7 @@ stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) +
 ggtitle("Width = 30")
 ```
 
-The above graph plots the moving average for the number of rats seen each month in the red line in order to track the trends, as well as the actual observed number of rats per day. Furthermore, we colored the observed rats by the season in which it was observed, and found a harmonic pattern - there would always be a lot of rats observed in the summer, and not many rats observed in the winter (except for one fateful day in 2017!).  This could reflect a few things - rats don't like the cold and tend to stay inside, so they are less likely to be seen. However, humans don't like cold either, so they are less likely to go outside and observe rats in New York. Overall, it is interesting to note the changes in rat observations each season.
+The above graph plots the moving average for the number of rats seen each month in the red line in order to track the trends, as well as the actual observed number of rats per day. Furthermore, we colored the observed rats by the season in which it was observed, and found a harmonic pattern - there would always be a lot of rats observed in the summer, and not many rats observed in the winter (except for one fateful day in 2017!).  This could reflect a few things - rats don't like the cold and tend to stay inside, so they are less likely to be seen. However, humans don't like cold either, so they are less likely to go outside and observe rats in New York. Overall, it is interesting to note the changes in  rat observations each season.
 
 ### tax rating map
 
@@ -418,6 +418,14 @@ ggplot() +
 With some temporal and time series analysis of rat sightings done, we now turn to analyzing the conditional distribution of rat sighting locations given borough in an effort to address the degree to which this property of a given rat sighting differs between boroughs.
 
 ```{r}
+rats_other = subset(rats, !grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_other = subset(rats_other, Location.Type != "Other (Explain Below)")
+rats_other = subset(rats_other, Location.Type != "Street Area")
+rats_other = subset(rats_other, (Borough == "BRONX" | Borough == "BROOKLYN" | Borough == "MANHATTAN" | Borough == "QUEENS" | Borough == "STATEN ISLAND"))
+rats_other = rats_other %>% group_by(Location.Type) %>% filter(n() > 300 )
+rats_other["Location.Type"][rats_other["Location.Type"] == "Vacant Building" | rats_other["Location.Type"] == "Vacant Lot"] <- "Unoccupied"
+rats_other["Location.Type"][rats_other["Location.Type"] == "Government Building" | rats_other["Location.Type"] == "Commercial Building"] <- "Office Building"
+
 par(mar = c(5,4,1,10))
 
 mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
@@ -429,6 +437,30 @@ This mosaic plot visualizes the conditional distribution of reporting sites of r
 
 ```{r}
 # importing rats
+#nice map (manhattan, brooklyn, queens, a bit of bronx)
+left =-74.03 
+bottom = 40.64
+right = -73.87
+top = 40.85
+nyc_coords <- c(left, bottom, right, top)
+
+#full map (all boroughs)
+leftF = -74.2
+bottomF = 40.55
+rightF = -73.87
+topF = 40.85
+nyc_coordsF <- c(leftF, bottomF, rightF, topF)
+
+#just dowtown manhattan
+leftM = -74.03
+bottomM = 40.69
+rightM = -73.94
+topM = 40.81
+nyc_coordsM <- c(leftM, bottomM, rightM, topM)
+
+nyc_map <- get_stamenmap(nyc_coords, maptype = "terrain", zoom = 11)
+nyc_mapF <- get_stamenmap(nyc_coordsF, maptype = "terrain", zoom = 11)
+nyc_mapM <- get_stamenmap(nyc_coordsM, maptype = "terrain", zoom = 11)
 
 ratSubset <- subset(rats, Longitude<right & Latitude<top & Longitude > left & Latitude >bottom)
 ratSubsetF <- subset(rats, Longitude<rightF & Latitude<topF & Longitude > leftF & Latitude >bottomF)
@@ -449,28 +481,6 @@ rat_mapF <- ggmap(nyc_mapF) +
 
 rat_mapM <- ggmap(nyc_mapM) +
   geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "coral3")
-
-# rat_map
-# rat_mapF
-# rat_mapM
-
-
-ratHealthScore_map <- ggmap(nyc_map) +
-  geom_point(data=ratSubset, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
-  geom_point(data=healthSubset, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
-  scale_color_distiller(palette = "PiYG")
-
-ratHealthScore_mapF <- ggmap(nyc_mapF) +
-  geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.01, color = "chocolate3")+
-  geom_point(data=healthSubsetF, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
-  scale_color_distiller(palette = "PiYG")
-
-ratHealthScore_mapM <- ggmap(nyc_mapM) +
-  geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "chocolate3") +
-  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) + 
-  scale_color_distiller(palette = "PiYG") + 
-  geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill="white", alpha=0.3)
-
 ```
 
 ```{r}
