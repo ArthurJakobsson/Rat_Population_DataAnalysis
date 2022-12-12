@@ -208,7 +208,7 @@ nyczips$rat_to_tax = nyczips$n_rats / nyczips$tax_rating
 
 ```
 
-```{r}
+```{r, include=FALSE}
 #this is to graph population by zip code
 popzip <- geojson_read('Raw/NYC_ZIPS.geojson', what = 'sp')
 popzip <- tidy(popzip, region = "postalCode")
