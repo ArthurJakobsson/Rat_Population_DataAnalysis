@@ -1,14 +1,14 @@
 ---
-title:  Manrattan - A Look into NYC Rats
-author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
-date:  November 18, 2022 
+title:  Man**rat**tan - A Look into NYC's Rats
+author:  Alex Cheng, Liz Chu, Arthur Jakobsson, Kevin Ren 
+date:  December 12, 2022
 output:
   pdf_document:
     toc: yes
   html_document:
     toc: yes
     toc_float: yes
-    code_folding: show
+    code_folding: hide
 urlcolor: blue
 ---
 
@@ -16,7 +16,7 @@ urlcolor: blue
 
 ## Descriptions of Datasets
 
-### Rat dataset
+### Rat Sightings Dataset
 *https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe*
 
 Our analysis primarily revolves around this dataset, with several supplementary datasets appended to this one for further in-depth analysis. This dataset contains 208,000 different rat sightings in the City of New York between 2010 to the present day, reported by citizens to the City of New York and accessed from NYC Open Data. 38 different variables are recorded for each sighting; notably, geographic data such as latitude, longitude, and borough data, and the date of opening and closing of the complaint.
@@ -221,7 +221,7 @@ popzip = popzip %>% left_join(., population, by = "id")
 ```
 
 
-### borough bar chart
+### Borough Bar Chart
 
 Our first visualization performs some elementary EDA on the distribution of rat sighting counts given the borough of their reporting. We created this graph in order to very directly address our research question of how rat sightings differ by borough.
 
@@ -236,7 +236,9 @@ ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
 ```
 This bar chart displays the number of rats seen within each borough in New York City. Brooklyn had by far the most rat sightings at 74,302, followed by Manhattan, the Bronx, Queens, and Staten Island, in that order. The low number of rat sightings in Staten Island might reflect its more cut-off nature from the rest of the city, as well as its more suburban feel, which could plausibly explain why Staten Island suffers less from the very urban problem of rats compared to the other boroughs in the city. Similarly, Brooklyn's position in the dead center of the city may explain why it had so many rats. Despite being the smallest borough by land size, Manhattan had the second-most rats, which may reflect the fact that it is one of the main business centers in the city (and the world) which would obviously attract a large number of rats with high concentrations of people and food. Thus, this simple visualization of rat sighting counts allows for greater generalizations about the boroughs in the city.
 
-### rat population map
+### Rat Population Choropleth Map
+
+To get a better sense of how the rats in New York City are distributed geographically, we decided to make a choropleth map that showcases the densities of rats by more specific subsections of the city. Upon looking at our data, we realized that each rat sighting was tagged with a zip code, so we created the following choropleth map that shows how many rats in our rat dataset were spotted in a given zip code region. 
 
 ```{r}
 ggplot() +
@@ -249,8 +251,10 @@ ggplot() +
   )
 ```
 
+This map tells us some key information about New York City's rats —  we see that a lot of rats are found in the center of the city (specifically, in the middle of Brooklyn) as well as in the northern part of Manhattan. Again, we notice that Staten Island is relatively dark. An interesting section of the map is upper Manhattan, as we notice that a few zip code regions to on the upper west side of Central Park (which is the rectangular cutout in Manhattan) have significantly higher numbers of rat sightings compared to lower Manhattan. The Upper West Side is known for its affluence, which may seem surprising considering the number of rat sightings, but a possible explanation is that official measures to mitigate rat problems in Manhattan have been more focused on the lower side of the borough, where most of the activity is. 
 
-### big events time series
+
+### Big Events Time Series
 
 ```{r}
 private = c(
@@ -316,14 +320,15 @@ other = c(
   "Other (Explain Below)"
 )
 
-rats$Location.Type[rats$Location.Type %in% private] <- "Private"
-rats$Location.Type[rats$Location.Type %in% public] <- "Public"
-rats$Location.Type[rats$Location.Type %in% commercial] <- "Commercial"
-rats$Location.Type[rats$Location.Type %in% other] <- "Other"
-rats$Location.Type <- factor(rats$Location.Type)
-rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
+ratsloc = rats
+ratsloc$Location.Type[ratsloc$Location.Type %in% private] <- "Private"
+ratsloc$Location.Type[ratsloc$Location.Type %in% public] <- "Public"
+ratsloc$Location.Type[ratsloc$Location.Type %in% commercial] <- "Commercial"
+ratsloc$Location.Type[ratsloc$Location.Type %in% other] <- "Other"
+ratsloc$Location.Type <- factor(ratsloc$Location.Type)
+ratsloc$Date = as.Date(ratsloc$Created.Date, "%m/%d/%Y")
 
-rats_per_day = rats %>% 
+rats_per_day = ratsloc %>% 
   group_by(Date, Location.Type) %>%
   tally() 
 
@@ -373,17 +378,18 @@ ggplot(rats_per_day) +
     data = mayors,
     size = 3, vjust = 0, hjust = 0, nudge_x = 50, angle = 90) +
   geom_segment(data = events, aes(x = Date, y = 40, xend = Date, yend = 55), color = "red") +
-  geom_text(data = events, aes(x = Date-50, y = 95, label = Event.Name), angle=90, color = "red")
+  geom_text(data = events, aes(x = Date-50, y = 95, label = Event.Name), angle=90, color = "red") + 
   scale_fill_manual(values = c("blue", "red"))
 ```
 
 
-### seasons time series
+### Seasons Time Series
 
 Building on this time series analysis, we now turn to a seasonal approach to modeling rat sightings over time, hoping to further address our research question of how temporal factors impact rat sighting counts.
 
 ```{r, warning=FALSE}
 library(ggplot2)
+rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
 rats_per_day = rats %>%
   group_by(Date) %>%
   tally()
@@ -398,13 +404,14 @@ ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
     x="Date",
     y="Number of Rats Recorded"
   ) +
-stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) +
-ggtitle("Width = 30")
+stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) 
 ```
 
-The above graph plots the moving average for the number of rats seen each month in the red line in order to track the trends, as well as the actual observed number of rats per day. Furthermore, we colored the observed rats by the season in which it was observed, and found a harmonic pattern - there would always be a lot of rats observed in the summer, and not many rats observed in the winter (except for one fateful day in 2017!).  This could reflect a few things - rats don't like the cold and tend to stay inside, so they are less likely to be seen. However, humans don't like cold either, so they are less likely to go outside and observe rats in New York. Overall, it is interesting to note the changes in  rat observations each season.
+The above graph plots the moving average for the number of rats seen each month in the red line in order to track the trends, as well as the actual observed number of rats per day. Furthermore, we colored the observed rats by the season in which it was observed, and found a harmonic pattern - there would always be a lot of rats observed in the summer, and not many rats observed in the winter (except for one fateful day in 2017!).  This could reflect a few things - rats don't like the cold and tend to stay inside, so they are less likely to be seen. However, humans don't like cold either, so they are less likely to go outside and observe rats in New York. Overall, it is interesting to note the changes in rat observations each season.
 
-### tax rating map
+### Tax Rating Choropleth Map 
+
+To answer our question about wealth and rat sightings, we turn to the tax return dataset. In order to see the relationship between the affluence of residents and number of rat sightings in each zip code area, we turn to choropleth maps again. This time, we first establish a tax rating system, which is a weighted average of all the tax returns in a given zip code area. The weighted average is calculated by multiplying each individual by their tax "rating" (1 meaning they belong in the lowest bracket and 6 meaning the highest bracket), and then taking the average of all the tax ratings in each zip code area. Thus, this value ranges from 1 to 6, with 1 meaning that everyone from that area is in the lowest tax bracket and 6 meaning the same for the highest tax bracket. To relate this value to rats, we will display the ratio between tax rating and number of rat sightings for each region. 
 
 ```{r}
 ggplot() +
@@ -419,7 +426,9 @@ ggplot() +
   )
 ```
 
-### mosaic plot
+This map has some clear differences when we compare it to the rat sightings choropleth map. First, the Upper West Side is no longer as extreme of a value, as we know that that area is very affluent (which means a smaller rat-to-tax rating ratio). However, we notice that Brooklyn still looks very similar to the original choropleth map, which may suggest a high amount of rats and a lower tax rating in these areas. As we know that Brooklyn is less affluent than Manhattan in general, a plausible explanation for the cluster of higher rat-to-tax rating ratios in the center of the city may be that there are more rats in this area compared to other areas with higher tax ratings (or more affluence). 
+
+### Location Type Mosaic Plot
 
 With some temporal and time series analysis of rat sightings done, we now turn to analyzing the conditional distribution of rat sighting locations given borough in an effort to address the degree to which this property of a given rat sighting differs between boroughs.
 
@@ -437,9 +446,9 @@ par(mar = c(5,4,1,10))
 mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
 ```
 
-This mosaic plot visualizes the conditional distribution of reporting sites of rats given borough. Based on this visualization, we see many statistically significantly high and low combinations of borough and reporting site under the assumption of independence between the two variables plotted. It is interesting to note the way rat reporting sites reflect the distinctive landscapes of each borough. For instance, we have significant evidence that Manhattan has higher proportions of rat sightings made at office buildings and construction sites than would be expected under independence, which reflect's Manhattan's reputation as a bustling metropolis with many developed and developing commercial construction projects. It is also interesting to note that the statistical significance of the proportion of reports made in Unoccupied sites (which we categorized as reports made in either Vacant Buildings or Vacant Lots) for every single borough; the high proportion of such sightings in Staten Island, Brooklyn, and the Bronx may suggest the presence of pockets of high poverty or low economic development in these boroughs, and the significantly low proportion of sightings in Unoccupied regions may suggest a relatively high degree of property and economic development in these boroughs, where fewer spaces are left unused by homeowners or businesses. In all, reveals that rats are generally found in very different sets of locations in different boroughs.
+This mosaic plot visualizes the conditional distribution of reporting sites of rats given borough. Based on this visualization, we see many statistically significantly high and low combinations of borough and reporting site under the assumption of independence between the two variables plotted. It is interesting to note the way rat reporting sites reflect the distinctive landscapes of each borough. For instance, we have significant evidence that Manhattan has higher proportions of rat sightings made at office buildings and construction sites than would be expected under independence, which reflects Manhattan's reputation as a bustling metropolis with many developed and developing commercial construction projects. It is also interesting to note that the statistical significance of the proportion of reports made in Unoccupied sites (which we categorized as reports made in either Vacant Buildings or Vacant Lots) for every single borough; the high proportion of such sightings in Staten Island, Brooklyn, and the Bronx may suggest the presence of pockets of high poverty or low economic development in these boroughs, and the significantly low proportion of sightings in Unoccupied regions may suggest a relatively high degree of property and economic development in these boroughs, where fewer spaces are left unused by homeowners or businesses. In all, reveals that rats are generally found in very different sets of locations in different boroughs.
 
-### restaurant map
+### Restaurant Heat Map
 
 ```{r, message=FALSE}
 # importing rats
@@ -497,7 +506,7 @@ ggmap(nyc_map) +
   scale_color_distiller(palette = "YlOrRd")
 ```
 
-### subway map
+### Subway Heat Map
 
 ```{r, warning=FALSE}
 #SUBWAY STATIONS
@@ -509,4 +518,4 @@ ggmap(nyc_map) +
 
 ## Conclusions and Future Work
 
-Through this analysis, we have learned a multitude of interesting things about the conditional distribution of rats in New York City given such variables as geography, temporal events, and physical landmarks. Clearly the distribution of rats in the city correlates highly with many of our tested variables, and displays significant geographic and temporal activity. It seems that the quanitity of rat sightings differ greatly between boroughs, zip codes within boroughs, and even specific types of locations within different boroughs. Futhermore, rat sightings display a significant trend and seasonal over time, all the while responding to major events that occur in the city. Future analysis of this topic would do well to analyze a) different datasets that could potentially be compared to rat sighting distributions such as racial or age-related data in order to assess how people of different social groups experience varying levels of rats in their homes, and/or b) dive deeper into the auxiliary variables which we had already selected; for example, correcting for geographic area in our borough and zip code data in order to calculate and visualize how the rats per square mile (and by extension, variables involving rat sighing counts such as rat sighting density to tax rating ratio) changes between geographic regions. In all, this project provided a thoughtful insight into life in New York City from the perspective of its most mainstay citizens - the rats.
+Through this analysis, we have learned a multitude of interesting things about the conditional distribution of rats in New York City given such variables as geography, temporal events, and physical landmarks. Clearly the distribution of rats in the city correlates highly with many of our tested variables, and displays significant geographic and temporal activity. It seems that the quantity of rat sightings differ greatly between boroughs, zip codes within boroughs, and even specific types of locations within different boroughs. Furthermore, rat sightings display a significant trend and seasonal over time, all the while responding to major events that occur in the city. Future analysis of this topic would do well to analyze a) different datasets that could potentially be compared to rat sighting distributions such as racial or age-related data in order to assess how people of different social groups experience varying levels of rats in their homes, and/or b) dive deeper into the auxiliary variables which we had already selected; for example, correcting for geographic area in our borough and zip code data in order to calculate and visualize how the rats per square mile (and by extension, variables involving rat sighing counts such as rat sighting density to tax rating ratio) changes between geographic regions. In all, this project provided a thoughtful insight into life in New York City from the perspective of its most mainstay citizens - the rats.
