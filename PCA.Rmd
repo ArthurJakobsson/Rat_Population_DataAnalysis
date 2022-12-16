@@ -30,8 +30,9 @@ prin_comps$borough = zipinfo$borough
 library(devtools)
 library(ggbiplot)
 ggbiplot(zipinfo.pca, alpha = 0.5, groups = zipinfo$borough, varname.adjust=-0.5) + labs(
-  title = "PCA of Rats, Colored by Borough", 
-  subtitle = "n_rats, n_rest, score_avg, population, tax_rating"
+  title = "PCA of Rats - Colored by Borough", 
+  subtitle = "Number of rats, Number of restaurants, 
+Average restaurant score, Population, Tax Rating"
 )
 
 ```

@@ -380,7 +380,7 @@ ggplot(rats_per_day) +
     data = mayors,
     size = 3, vjust = 0, hjust = 0, nudge_x = 50, angle = 90) +
   geom_segment(data = events, aes(x = Date, y = 40, xend = Date, yend = 55), color = "red") +
-  geom_text(data = events, aes(x = Date-50, y = 95, label = Event.Name), angle=90, color = "red") + 
+  geom_text(data = events, aes(x = Date-50, y = 95, label = Event.Name), angle=90, color = "red")+
   scale_fill_manual(values = c("blue", "red"))
 ```
 

@@ -396,11 +396,11 @@ rats$Location.Type[rats$Location.Type %in% other] <- "Other"
 rats$Location.Type <- factor(rats$Location.Type)
 rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
 
-rats_per_day = rats %>% 
+rats_per_dayL = rats %>% 
   group_by(Date, Location.Type) %>%
   tally() 
 
-names(rats_per_day) = c("date", "locationtype", "n_rats")
+names(rats_per_dayL) = c("date", "locationtype", "n_rats")
 
 # ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
 #   geom_line(alpha=0.3) + labs(
@@ -422,7 +422,7 @@ events <- events %>%  filter(!row_number() %in% c(1, 2, 5))
 ```
 
 ```{r}
-ggplot(rats_per_day) +
+ggplot(rats_per_dayL) +
   geom_line(aes(date, n_rats, color=locationtype), alpha=0.3) + labs(
     title="Number of Rats Recorded on Each Day (with Mayors)", 
     subtitle="colored by the type of location",
@@ -484,7 +484,7 @@ rats_per_day$Season = time2season(rats_per_day$Date, out.fmt = "seasons")
 rats_per_day$Season = ifelse(rats_per_day$Season == "autumm", "autumn", rats_per_day$Season)
 
 ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
-  geom_line(alpha=0.3) + labs(
+  geom_line(aes(Date, n), alpha=0.3) + labs(
     title="Number of Rats Recorded on Each Day",
     subtitle="colored by the season",
     x="Date",
