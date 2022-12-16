@@ -3,12 +3,11 @@ title:  Man**rat**tan - A Look into NYC's Rats
 author:  Alex Cheng, Liz Chu, Arthur Jakobsson, Kevin Ren 
 date:  December 12, 2022
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
-    code_folding: hide
-  pdf_document:
-    toc: yes
 urlcolor: blue
 ---
 
@@ -234,6 +233,7 @@ ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
   geom_col(aes(fill=Borough)) +
   labs(title="Number of Rat Sightings by Borough")
 ```
+
 This bar chart displays the number of rats seen within each borough in New York City. Brooklyn had by far the most rat sightings at 74,302, followed by Manhattan, the Bronx, Queens, and Staten Island, in that order. The low number of rat sightings in Staten Island might reflect its more cut-off nature from the rest of the city, as well as its more suburban feel, which could plausibly explain why Staten Island suffers less from the very urban problem of rats compared to the other boroughs in the city. Similarly, Brooklyn's position in the dead center of the city may explain why it had so many rats. Despite being the smallest borough by land size, Manhattan had the second-most rats, which may reflect the fact that it is one of the main business centers in the city (and the world) which would obviously attract a large number of rats with high concentrations of people and food. Thus, this simple visualization of rat sighting counts allows for greater generalizations about the boroughs in the city.
 
 ### Rat Population Choropleth Map
@@ -529,7 +529,7 @@ ggmap(nyc_map) +
   guides(fill = guide_legend(title = "Rat Density"))
 ```
 
-We observe again that the subways are densely populated in Midtown where there is a noticeable absence of rats. However, we do notice that there are some clearer trends in rats populations following approximate lines of the subway. We surmise that this is because living near subway lines is considered desireable and therefore these areas are likely to be more densely populated and also have much heavier foot traffic and daily activity. The areas in which these trends are most noticeable are in the Upper West Side, Harlem, Bedford-Stuyvesant, Williamsburg and even in Queens. It is also interesting to note that, similarly to Midtown, the Financial District in the South of Manhattan seems to host few rat populations. Therefore, we could potentially suggest that the similar industrial designs and lifestyles of these two neighborhoods may have some impact on the rat populations and density in these areas.
+We observe again that the subways are densely populated in Midtown where there is a noticeable absence of rats. However, we do notice that there are some clearer trends in rats populations following approximate lines of the subway. We surmise that this is because living near subway lines is considered desirable and therefore these areas are likely to be more densely populated and also have much heavier foot traffic and daily activity. The areas in which these trends are most noticeable are in the Upper West Side, Harlem, Bedford-Stuyvesant, Williamsburg and even in Queens. It is also interesting to note that, similarly to Midtown, the Financial District in the South of Manhattan seems to host few rat populations. Therefore, we could potentially suggest that the similar industrial designs and lifestyles of these two neighborhoods may have some impact on the rat populations and density in these areas.
 
 
 ## Conclusions and Future Work
