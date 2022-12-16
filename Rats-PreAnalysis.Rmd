@@ -418,7 +418,10 @@ names(rats_per_day) = c("date", "locationtype", "n_rats")
 mayors$Date.Start <- as.Date(mayors$Date.Start)
 mayors$Date.End <- as.Date(mayors$Date.End)
 events$Date <- as.Date(events$Date)
+events <- events %>%  filter(!row_number() %in% c(1, 2, 5))
+```
 
+```{r}
 ggplot(rats_per_day) +
   geom_line(aes(date, n_rats, color=locationtype), alpha=0.3) + labs(
     title="Number of Rats Recorded on Each Day (with Mayors)", 
